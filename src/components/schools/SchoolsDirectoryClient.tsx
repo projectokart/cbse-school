@@ -3801,21 +3801,6 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                             )}
                           </div>
 
-                          {/* Filter Button */}
-                          <button
-                            type="button"
-                            onClick={() => setIsMobileFilterOpen(true)}
-                            className="relative p-1.5 text-gray-700 hover:text-blue-600 rounded-lg bg-white hover:bg-blue-50 border border-gray-200 transition shrink-0 cursor-pointer"
-                            title="Filter Schools"
-                          >
-                            <Filter size={13} className={activeFiltersCount > 0 ? 'text-blue-600' : 'text-gray-600'} />
-                            {activeFiltersCount > 0 && (
-                              <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] rounded-full bg-blue-600 text-white text-[9px] font-black flex items-center justify-center px-0.5">
-                                {activeFiltersCount}
-                              </span>
-                            )}
-                          </button>
-
                           {/* Radius quick buttons */}
                           <div className="flex items-center gap-0.5 shrink-0 bg-white p-0.5 rounded-lg border border-gray-200">
                             {[1, 3, 5, 10].map((km) => (

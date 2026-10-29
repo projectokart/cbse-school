@@ -1,0 +1,1618 @@
+@import '../styles/m3-design-system.css';
+@import '../components/SharedTheme.css';
+@import 'katex/dist/katex.min.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes progress {
+  0%   { transform: scaleX(0);   opacity: 1; }
+  70%  { transform: scaleX(0.9); opacity: 1; }
+  100% { transform: scaleX(1);   opacity: 0; }
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+@layer base {
+  :root {
+    /* 1. Google Material Surfaces & Typography (Light Mode) */
+    --background: 0 0% 100%;           /* #FFFFFF - Pure White Google Canvas */
+    --foreground: 206 6% 25%;          /* #3C4043 - Google Search Console Primary Text */
+
+    --card: 0 0% 100%;                 /* #FFFFFF - Google Card Surface */
+    --card-foreground: 206 6% 25%;     /* #3C4043 */
+
+    --popover: 0 0% 100%;              /* #FFFFFF */
+    --popover-foreground: 206 6% 25%;  /* #3C4043 */
+
+    --muted: 0 0% 98%;                 /* #FAFAFA - Google Search Console Section Fill */
+    --muted-foreground: 213 5% 39%;    /* #5F6368 - Google Secondary Text */
+
+    --border: 0 0% 88%;                /* rgba(0,0,0,0.12) / #E0E0E0 - Google 1px Border */
+    --input: 219 9% 87%;               /* #DADCE0 */
+    --ring: 214 82% 51%;               /* #1A73E8 - Google Blue Focus */
+
+    /* 2. Google Material & CSEEL Brand Quartet */
+    --primary: 202 100% 26.9%;         /* #005689 - CSEEL Deep Brand Blue */
+    --primary-foreground: 0 0% 100%;   /* #FFFFFF */
+    --primary-light: 202 60% 94%;      /* Soft blue tint */
+    --primary-hover: 202 100% 21%;     /* #00436B - Darker hover */
+
+    --secondary: 200 10% 95%;          /* #F1F3F4 */
+    --secondary-foreground: 206 6% 25%;/* #3C4043 */
+
+    --accent: 214 90% 95%;
+    --accent-foreground: 214 82% 51%;
+
+    --destructive: 4 80% 56%;          /* #EA4335 - Google Red */
+    --destructive-foreground: 0 0% 100%;
+
+    --brand-blue: 214 82% 51%;         /* #1A73E8 */
+    --brand-red: 4 80% 56%;            /* #EA4335 */
+    --brand-gold: 44 98% 50%;          /* #FBBC04 */
+    --brand-green: 136 53% 43%;        /* #34A853 */
+    --brand-navy: 206 6% 25%;          /* #3C4043 */
+
+    --radius: 0.25rem;
+
+    --topbar-bg: 214 82% 51%;          /* #1A73E8 */
+    --topbar-foreground: 0 0% 100%;    /* #FFFFFF */
+
+    --hero-gradient-start: 0 0% 100%;
+    --hero-gradient-end: 0 0% 100%;
+
+    /* Domain card overlays — all derived from brand primary #005689 */
+    --domain-card-1-from: #005689;   /* Science & Math — primary */
+    --domain-card-1-to:   #0878A8;   /* lighter tint */
+    --domain-card-2-from: #004570;   /* Engineering — deep navy */
+    --domain-card-2-to:   #005689;   /* back to primary */
+    --domain-card-3-from: #006fa8;   /* Art & Design — mid teal-blue */
+    --domain-card-3-to:   #00a3cc;   /* bright accent */
+
+    /* 3. Shared Soft-Tone Tokens (Cards, Badges & Filter Chips) */
+    --soft-blue-bg: #E8F0FE;
+    --soft-blue-border: #D2E3FC;
+    --soft-blue-text: #1967D2;
+
+    --soft-green-bg: #E6F4EA;
+    --soft-green-border: #CEEAD6;
+    --soft-green-text: #137333;
+
+    --soft-yellow-bg: #FEF7E0;
+    --soft-yellow-border: #FEEFC3;
+    --soft-yellow-text: #B06000;
+
+    --soft-red-bg: #FCE8E6;
+    --soft-red-border: #FAD2CF;
+    --soft-red-text: #C5221F;
+
+    --soft-neutral-bg: #F1F3F4;
+    --soft-neutral-border: #DADCE0;
+    --soft-neutral-text: #3C4043;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 225 6% 13%;
+    --sidebar-primary: 214 82% 51%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 200 10% 95%;
+    --sidebar-accent-foreground: 225 6% 13%;
+    --sidebar-border: 219 9% 87%;
+    --sidebar-ring: 214 82% 51%;
+
+    /* 4. Global Dynamic Styling & Button Variations (Admin Controlled) */
+    --brand-primary: #006FCC;
+    --brand-primary-hover: #005499;
+    --brand-secondary-bg: #F7F8F8;
+    --brand-secondary-text: #006FCC;
+    --brand-secondary-border: #E8E9E9;
+    --btn-radius: 14px;
+    --btn-shadow: 0 4px 14px rgba(0, 111, 204, 0.25);
+    --card-radius: 16px;
+    --google-blue: #1A73E8;
+    --google-blue-hover: #1557B0;
+    --google-pill-radius: 9999px;
+    --google-shadow: 0 1px 3px rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+
+    --achievement-bg: 200 10% 95%;
+  }
+
+  .dark {
+    /* 1. Google Material Surfaces & Typography (Dark Mode) */
+    --background: 0 0% 7.1%;           /* #121212 - Material Dark Canvas */
+    --foreground: 216 10% 92%;         /* #E8EAED - Google Dark Text */
+
+    --card: 210 3% 12.2%;              /* #1E1F20 - Material Dark Card */
+    --card-foreground: 216 10% 92%;    /* #E8EAED */
+
+    --popover: 210 3% 12.2%;           /* #1E1F20 */
+    --popover-foreground: 216 10% 92%; /* #E8EAED */
+
+    --muted: 210 4% 16.5%;             /* #282A2C - Material Dark Input/Hover */
+    --muted-foreground: 213 7% 63%;    /* #9AA0A6 - Google Dark Muted Text */
+
+    --border: 210 5% 25%;              /* #3C4043 - Material Dark Border */
+    --input: 210 5% 25%;               /* #3C4043 */
+    --ring: 217 89% 76%;               /* #8AB4F8 - Google Dark Blue Ring */
+
+    /* 2. Google Material 4-Color Brand Quartet (Dark Mode) */
+    --primary: 217 89% 76%;            /* #8AB4F8 - Google Dark Blue */
+    --primary-foreground: 225 6% 13%;  /* #202124 */
+    --primary-light: 217 89% 20%;
+    --primary-hover: 217 89% 85%;
+
+    --secondary: 210 4% 16.5%;         /* #282A2C */
+    --secondary-foreground: 216 10% 92%;
+
+    --accent: 210 4% 20%;
+    --accent-foreground: 217 89% 76%;
+
+    --destructive: 4 80% 56%;          /* #EA4335 */
+    --destructive-foreground: 0 0% 100%;
+
+    --brand-blue: 217 89% 76%;         /* #8AB4F8 */
+    --brand-red: 4 80% 56%;            /* #EA4335 */
+    --brand-gold: 44 98% 50%;          /* #FBBC04 */
+    --brand-green: 136 53% 43%;        /* #34A853 */
+    --brand-navy: 217 89% 76%;
+
+    /* 3. Shared Soft-Tone Tokens (Dark Mode) */
+    --soft-blue-bg: rgba(26, 115, 232, 0.12);
+    --soft-blue-border: rgba(26, 115, 232, 0.3);
+    --soft-blue-text: #8AB4F8;
+
+    --soft-green-bg: rgba(52, 168, 83, 0.12);
+    --soft-green-border: rgba(52, 168, 83, 0.3);
+    --soft-green-text: #81C995;
+
+    --soft-yellow-bg: rgba(251, 188, 4, 0.12);
+    --soft-yellow-border: rgba(251, 188, 4, 0.3);
+    --soft-yellow-text: #FDD663;
+
+    --soft-red-bg: rgba(234, 67, 53, 0.12);
+    --soft-red-border: rgba(234, 67, 53, 0.3);
+    --soft-red-text: #F28B82;
+
+    --soft-neutral-bg: #282A2C;
+    --soft-neutral-border: #3C4043;
+    --soft-neutral-text: #E8EAED;
+
+    --sidebar-background: 210 3% 12.2%;
+    --sidebar-foreground: 216 10% 92%;
+    --sidebar-primary: 217 89% 76%;
+    --sidebar-primary-foreground: 225 6% 13%;
+    --sidebar-accent: 210 4% 16.5%;
+    --sidebar-accent-foreground: 216 10% 92%;
+    --sidebar-border: 210 5% 25%;
+    --sidebar-ring: 217 89% 76%;
+
+    --achievement-bg: 210 4% 16.5%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  .wf-force-outline-none[tabindex="-1"]:focus {
+    outline: none !important;
+  }
+
+  html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    touch-action: pan-y;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+    max-width: 100vw;
+  }
+
+  body {
+    background-color: #ffffff;
+    color: #334155;
+    font-family: 'Lato', var(--font-roboto), Roboto, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 16px;
+    letter-spacing: 0.00625em;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    text-size-adjust: 100%;
+    touch-action: pan-y;
+    overflow-x: clip;
+    max-width: 100vw;
+    width: 100%;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     UNIVERSAL HEADING SYSTEM (Labster Montserrat Typography)
+     ═══════════════════════════════════════════════════════════ */
+  h1, h2, h3, h4, h5, h6,
+  .h1, .h2, .h3, .h4, .h5, .h6,
+  .hero-h1, .hero-h2, .hero-h3 {
+    font-family: 'Montserrat', 'Google Sans Display', 'Google Sans', sans-serif;
+    letter-spacing: -0.02em;
+    color: #003C6E;
+  }
+
+  h1, .h1 { font-weight: 800; }
+  h2, .h2 { font-weight: 700; }
+  h3, .h3 { font-weight: 700; }
+  h4, .h4 { font-weight: 600; }
+  h5, .h5 { font-weight: 600; }
+  h6, .h6 { font-weight: 600; }
+
+  /* Preserve Original Brand Blue & Bold Typography Exclusively for "Welcome to CSEEL" Hero Title */
+  h1.cseel-brand-hero-h1,
+  h1.cseel-brand-hero-h1 span {
+    font-family: 'Montserrat', sans-serif !important;
+    color: #003C6E !important;
+    font-weight: 800 !important;
+  }
+
+  /* Interactive Heading Hovers (Labster Accent Blue #006FCC) */
+  a:hover h1, a:hover h2, a:hover h3, a:hover h4,
+  .group:hover h1:not(.text-white):not([style*="color: #ffffff"]):not([style*="color: rgb(255, 255, 255)"]),
+  .group:hover h2:not(.text-white),
+  .group:hover h3:not(.text-white),
+  .group:hover h4:not(.text-white) {
+    color: #006FCC !important;
+  }
+
+  /* Navbar Mega Menu Titles: Labster Hanken Grotesk, #1B1F23 by default, #006FCC on hover */
+  .nav-menu-item-title {
+    font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: #1B1F23 !important;
+    font-weight: 700 !important;
+    transition: color 0.18s ease-in-out;
+  }
+  .group:hover .nav-menu-item-title,
+  a:hover .nav-menu-item-title,
+  .nav-menu-item-title:hover {
+    color: #006FCC !important;
+  }
+
+  /* Top Navigation Bar Item Links: Labster Hanken Grotesk & #1B1F23 Colors */
+  .top-nav-link,
+  .top-nav-link span {
+    color: #1B1F23 !important;
+    font-weight: 700 !important;
+    font-family: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    letter-spacing: 0.16px;
+    transition: color 0.2s ease-in-out;
+  }
+  .top-nav-link:hover,
+  .top-nav-link:hover span,
+  .top-nav-link:hover svg,
+  .top-nav-link.is-open,
+  .top-nav-link.is-open span,
+  .top-nav-link.is-open svg {
+    color: #006FCC !important;
+  }
+
+  /* Preserve Pure White Headings in Dark / Blue Hero Banners */
+  h1.text-white, h2.text-white, h3.text-white, h4.text-white, h5.text-white, h6.text-white,
+  .text-white h1, .text-white h2, .text-white h3, .text-white h4, .text-white h5, .text-white h6,
+  .bg-primary h1, .bg-primary h2, .bg-primary h3, .bg-primary h4,
+  .about-hero-gradient h1, .about-hero-gradient h2, .about-hero-gradient h3, .about-hero-gradient h4,
+  [class*="from-[#0D4979]"] h1, [class*="from-[#0D4979]"] h2, [class*="from-[#0D4979]"] h3,
+  [class*="from-[#005689]"] h1, [class*="from-[#005689]"] h2, [class*="from-[#005689]"] h3,
+  [class*="from-[#002244]"] h1, [class*="from-[#002244]"] h2, [class*="from-[#002244]"] h3,
+  [class*="bg-[#005689]"] h1, [class*="bg-[#005689]"] h2, [class*="bg-[#005689]"] h3,
+  [class*="bg-[#0D4979]"] h1, [class*="bg-[#0D4979]"] h2, [class*="bg-[#0D4979]"] h3,
+  [class*="bg-[#002244]"] h1, [class*="bg-[#002244]"] h2, [class*="bg-[#002244]"] h3,
+  .swiper-slide h1, .swiper-slide h2, .swiper-slide h3,
+  .swiper-slide:hover h1, .swiper-slide:hover h2,
+  .subject-hero-h1, .subject-hero-h1:hover {
+    color: #ffffff !important;
+  }
+
+  /* Domain cards — keep headings dark charcoal on normal + hover state */
+  .domain-card h1, .domain-card h2, .domain-card h3, .domain-card h4, .domain-card h5, .domain-card h6,
+  .domain-card:hover h1, .domain-card:hover h2, .domain-card:hover h3, .domain-card:hover h4, .domain-card:hover h5, .domain-card:hover h6,
+  a.domain-card:hover h1, a.domain-card:hover h2, a.domain-card:hover h3, a.domain-card:hover h4,
+  .domain-card.group:hover h1, .domain-card.group:hover h2, .domain-card.group:hover h3, .domain-card.group:hover h4 {
+    color: #3C4043 !important;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     BOLD & EMPHASIZED TEXT (Clean Google Charcoal #3C4043, no forced blue)
+     ═══════════════════════════════════════════════════════════ */
+  strong, b,
+  .prose strong, .prose b,
+  article strong, article b,
+  section strong, section b,
+  p strong, p b,
+  span strong, span b,
+  li strong, li b {
+    color: #3C4043;
+    font-weight: 500;
+  }
+
+  /* Preserve White text on dark/blue backgrounds */
+  .text-white strong, .text-white b,
+  [class*="text-white"] strong, [class*="text-white"] b,
+  footer strong, footer b,
+  header strong, header b,
+  [class*="from-[#0D4979]"] strong, [class*="from-[#0D4979]"] b,
+  [class*="from-[#005689]"] strong, [class*="from-[#005689]"] b,
+  [class*="bg-[#005689]"] strong, [class*="bg-[#005689]"] b,
+  [class*="bg-[#0D4979]"] strong, [class*="bg-[#0D4979]"] b,
+  .bg-primary strong, .bg-primary b {
+    color: #ffffff !important;
+  }
+
+  button, input, optgroup, select, textarea {
+    font-family: var(--font-roboto), Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     BASE CONTENT TYPOGRAPHY — Exact Google Search Console Scale
+     ═══════════════════════════════════════════════════════════ */
+  p, li, label, td, th, blockquote {
+    font-family: var(--font-roboto), Roboto, Arial, sans-serif;
+    font-size: 1rem; /* 16px (.ITFqUd) */
+    line-height: 1.5rem; /* 24px */
+    letter-spacing: 0.00625em;
+    font-weight: 400;
+    color: #3C4043;
+  }
+
+  /* Google Search Console Heading Scale (.R3QfZd, .w5qowf, .UKleLb) */
+  h1 { font-size: clamp(2rem, 3.8vw, 3.5rem); font-weight: 400; line-height: 1.15; letter-spacing: 0; }
+  h2 { font-size: clamp(1.375rem, 2.5vw, 1.75rem); font-weight: 400; line-height: 1.28; letter-spacing: 0; }
+  h3 { font-size: clamp(1.125rem, 2vw, 1.5rem); font-weight: 400; line-height: 1.33; letter-spacing: 0; }
+  h4 { font-size: 1.125rem; font-weight: 500; line-height: 1.4; }
+  h5 { font-size: 1rem; font-weight: 500; line-height: 1.5; }
+  h6 { font-size: 0.9375rem; font-weight: 500; line-height: 1.5; }
+}
+
+
+@layer components {
+  /* ═══════════════════════════════════════════════════════════
+     1. SURFACES & CONTAINERS
+     ═══════════════════════════════════════════════════════════ */
+  .card-google-surface {
+    @apply bg-white dark:bg-[#1E1F20] border border-[#DADCE0] dark:border-[#3C4043] rounded-2xl shadow-sm transition-all duration-200;
+  }
+  .card-google-surface:hover {
+    @apply shadow-sm border-[#c3c6cc] dark:border-[#52565a];
+  }
+  .card-google-elevated {
+    @apply bg-white dark:bg-[#1E1F20] border border-[#DADCE0] dark:border-[#3C4043] rounded-2xl shadow-sm hover:shadow-md transition-all duration-200;
+  }
+  .modal-surface {
+    @apply bg-white dark:bg-[#1E1F20] border border-[#DADCE0] dark:border-[#3C4043] rounded-2xl shadow-xl transition-all;
+  }
+  .popover-surface {
+    @apply bg-white dark:bg-[#1E1F20] border border-[#DADCE0] dark:border-[#3C4043] rounded-xl shadow-lg p-2 transition-all;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     2. GOOGLE SOFT-TONE TINTED CARDS (Shared with Badges/Chips)
+     ═══════════════════════════════════════════════════════════ */
+  .card-soft-blue {
+    background-color: var(--soft-blue-bg);
+    border: 1px solid var(--soft-blue-border);
+    @apply rounded-2xl transition-all duration-200;
+  }
+  .card-soft-green {
+    background-color: var(--soft-green-bg);
+    border: 1px solid var(--soft-green-border);
+    @apply rounded-2xl transition-all duration-200;
+  }
+  .card-soft-yellow {
+    background-color: var(--soft-yellow-bg);
+    border: 1px solid var(--soft-yellow-border);
+    @apply rounded-2xl transition-all duration-200;
+  }
+  .card-soft-red {
+    background-color: var(--soft-red-bg);
+    border: 1px solid var(--soft-red-border);
+    @apply rounded-2xl transition-all duration-200;
+  }
+  .card-soft-neutral {
+    background-color: var(--soft-neutral-bg);
+    border: 1px solid var(--soft-neutral-border);
+    @apply rounded-2xl transition-all duration-200;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     3. NAVIGATION, HEADER & SIDEBAR
+     ═══════════════════════════════════════════════════════════ */
+  .navbar-glass {
+    @apply bg-white/90 dark:bg-[#1E1F20]/90 backdrop-blur-md border-b border-[#DADCE0] dark:border-[#3C4043] transition-all;
+  }
+  .nav-link {
+    @apply px-3.5 py-2 rounded-xl text-sm font-medium text-[#5F6368] dark:text-[#9AA0A6] hover:text-[#202124] dark:hover:text-[#E8EAED] hover:bg-[#F1F3F4] dark:hover:bg-[#282A2C] transition-all duration-150;
+  }
+  .nav-link-active {
+    @apply px-3.5 py-2 rounded-xl text-sm font-semibold text-[#1A73E8] dark:text-[#8AB4F8] bg-[#E8F0FE] dark:bg-[#1A73E8]/15 transition-all;
+  }
+  .sidebar-surface {
+    @apply bg-white dark:bg-[#1E1F20] border-r border-[#DADCE0] dark:border-[#3C4043] transition-all;
+  }
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#5F6368] dark:text-[#9AA0A6] hover:text-[#202124] dark:hover:text-[#E8EAED] hover:bg-[#F1F3F4] dark:hover:bg-[#282A2C] transition-all duration-150;
+  }
+  .sidebar-item-active {
+    @apply flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#1A73E8] dark:text-[#8AB4F8] bg-[#E8F0FE] dark:bg-[#1A73E8]/15 transition-all;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     4. BUTTONS & ACTIONS (Dynamic Admin Theme + CSEEL & Google Variations)
+     ═══════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════
+     LABSTER SIGNATURE BUTTON SYSTEM (Rounded-XL 14px, Montserrat Font)
+     ═══════════════════════════════════════════════════════════ */
+  .btn-sm {
+    @apply h-9 px-4 py-1.5 text-xs font-bold;
+    border-radius: var(--btn-radius, 14px);
+    font-family: 'Montserrat', sans-serif;
+  }
+  .btn-md {
+    @apply h-11 px-6 py-2.5 text-sm md:text-[15px] font-bold;
+    border-radius: var(--btn-radius, 14px);
+    font-family: 'Montserrat', sans-serif;
+  }
+  .btn-lg {
+    @apply h-12 px-8 py-3.5 text-base font-bold;
+    border-radius: var(--btn-radius, 14px);
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  /* ── 🌟 LABSTER SIGNATURE PRIMARY BUTTON (Rounded-XL 14px, #006FCC) ── */
+  .btn-cseel, .button_cseel, .btn-primary, .button_primary, .button-primary, a.button_primary, button.button_primary, a.btn-primary, button.btn-primary, .btn-google-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm md:text-[15px] font-bold transition-all duration-200 cursor-pointer active:scale-[0.98];
+    border-radius: var(--btn-radius, 14px) !important;
+    background-color: var(--brand-primary, #006FCC) !important;
+    color: #ffffff !important;
+    font-family: 'Montserrat', sans-serif !important;
+    box-shadow: 0 4px 14px rgba(0, 111, 204, 0.25) !important;
+    border: none;
+    line-height: 1.3;
+  }
+  .btn-cseel:hover, .button_cseel:hover, .btn-primary:hover, .button_primary:hover, .button-primary:hover, a.button_primary:hover, button.button_primary:hover, a.btn-primary:hover, button.btn-primary:hover, .btn-google-primary:hover {
+    background-color: var(--brand-primary-hover, #005399) !important;
+    box-shadow: 0 6px 20px rgba(0, 111, 204, 0.35) !important;
+    transform: translateY(-1px);
+    color: #ffffff !important;
+  }
+
+  /* ── 🌟 LABSTER SECONDARY / TONAL BUTTON ── */
+  .btn-google-tonal, .btn-tonal, .btn-google-secondary, .btn-secondary, .button_secondary, .button-secondary, a.button_secondary, button.button_secondary, a.btn-secondary, button.btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm md:text-[15px] font-bold transition-all duration-200 cursor-pointer active:scale-[0.98];
+    border-radius: var(--btn-radius, 14px) !important;
+    background-color: var(--brand-secondary-bg, #F7F8F8) !important;
+    color: var(--brand-secondary-text, #006FCC) !important;
+    font-family: 'Montserrat', sans-serif !important;
+    border: 1px solid var(--brand-secondary-border, #E8E9E9) !important;
+    line-height: 1.3;
+  }
+  .btn-google-tonal:hover, .btn-tonal:hover, .btn-google-secondary:hover, .btn-secondary:hover, .button_secondary:hover, .button-secondary:hover, a.button_secondary:hover, button.button_secondary:hover, a.btn-secondary:hover, button.btn-secondary:hover {
+    background-color: #EDF5FA !important;
+    border-color: #D6EDFF !important;
+    color: var(--brand-primary-hover, #005399) !important;
+    transform: translateY(-1px);
+  }
+
+  /* ── 🌟 LABSTER OUTLINE / WHITE BUTTON ── */
+  .btn-google-outline, .btn-outline, .button_outline, .button-outline, a.button_outline, button.button_outline, a.btn-outline, button.btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold bg-white active:scale-[0.98] transition-all cursor-pointer;
+    border-radius: var(--btn-radius, 14px) !important;
+    border: 1px solid #E8E9E9 !important;
+    font-family: 'Montserrat', sans-serif !important;
+    color: #003C6E !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+  .btn-google-outline:hover, .btn-outline:hover, .button_outline:hover, a.button_outline:hover, button.button_outline:hover {
+    background-color: #F7F8F8 !important;
+    border-color: #CBD5E1 !important;
+    color: #006FCC !important;
+  }
+  .btn-google-danger, .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold bg-[#EA4335] hover:bg-[#D93025] text-white shadow-sm active:scale-[0.98] transition-all cursor-pointer;
+  }
+  .btn-google-success, .btn-success {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold bg-[#34A853] hover:bg-[#2D9247] text-white shadow-sm active:scale-[0.98] transition-all cursor-pointer;
+  }
+  .btn-google-icon, .btn-icon {
+    @apply inline-flex items-center justify-center w-9 h-9 rounded-full text-[#5F6368] dark:text-[#9AA0A6] hover:text-[#202124] dark:hover:text-[#E8EAED] hover:bg-[#F1F3F4] dark:hover:bg-[#282A2C] transition-all cursor-pointer;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     5. FORM CONTROLS & INPUTS
+     ═══════════════════════════════════════════════════════════ */
+  .input-google {
+    @apply w-full px-3.5 py-2.5 rounded-xl text-sm bg-white dark:bg-[#1E1F20] text-[#202124] dark:text-[#E8EAED] border border-[#DADCE0] dark:border-[#3C4043] placeholder-[#5F6368] dark:placeholder-[#9AA0A6] focus:outline-none focus:border-[#1A73E8] focus:ring-2 focus:ring-[#1A73E8]/20 transition-all;
+  }
+  .input-google-search {
+    @apply w-full pl-10 pr-4 py-2.5 rounded-full text-sm bg-[#F1F3F4] dark:bg-[#282A2C] text-[#202124] dark:text-[#E8EAED] border border-transparent focus:border-[#1A73E8] focus:bg-white dark:focus:bg-[#1E1F20] placeholder-[#5F6368] dark:placeholder-[#9AA0A6] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]/20 transition-all;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     6. BADGES, CHIPS & TAGS (Shared Soft-Tone Tokens)
+     ═══════════════════════════════════════════════════════════ */
+  .badge-soft-blue, .badge-blue {
+    background-color: var(--soft-blue-bg);
+    border: 1px solid var(--soft-blue-border);
+    color: var(--soft-blue-text);
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+  .badge-soft-green, .badge-green {
+    background-color: var(--soft-green-bg);
+    border: 1px solid var(--soft-green-border);
+    color: var(--soft-green-text);
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+  .badge-soft-yellow, .badge-yellow {
+    background-color: var(--soft-yellow-bg);
+    border: 1px solid var(--soft-yellow-border);
+    color: var(--soft-yellow-text);
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+  .badge-soft-red, .badge-red {
+    background-color: var(--soft-red-bg);
+    border: 1px solid var(--soft-red-border);
+    color: var(--soft-red-text);
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+  .badge-soft-neutral, .badge-neutral {
+    background-color: var(--soft-neutral-bg);
+    border: 1px solid var(--soft-neutral-border);
+    color: var(--soft-neutral-text);
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+  .chip-filter {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#F1F3F4] dark:bg-[#282A2C] text-[#5F6368] dark:text-[#9AA0A6] hover:bg-[#DADCE0] dark:hover:bg-[#3C4043] hover:text-[#202124] dark:hover:text-[#E8EAED] cursor-pointer transition-all;
+  }
+  .chip-filter-active {
+    background-color: var(--soft-blue-bg);
+    border: 1px solid var(--soft-blue-border);
+    color: var(--soft-blue-text);
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     7. TABS & SEGMENTED SWITCHERS
+     ═══════════════════════════════════════════════════════════ */
+  .tabs-bar {
+    @apply inline-flex items-center gap-1 p-1 bg-[#F1F3F4] dark:bg-[#282A2C] rounded-xl border border-[#DADCE0] dark:border-[#3C4043];
+  }
+  .tab-pill {
+    @apply px-3.5 py-1.5 rounded-lg text-xs font-medium text-[#5F6368] dark:text-[#9AA0A6] hover:text-[#202124] dark:hover:text-[#E8EAED] transition-all cursor-pointer;
+  }
+  .tab-pill-active {
+    @apply px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-[#1E1F20] text-[#202124] dark:text-[#E8EAED] shadow-xs transition-all cursor-pointer;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     8. DATA TABLES
+     ═══════════════════════════════════════════════════════════ */
+  .table-shell {
+    @apply w-full overflow-hidden bg-white dark:bg-[#1E1F20] border border-[#DADCE0] dark:border-[#3C4043] rounded-2xl shadow-xs;
+  }
+  .th-cell {
+    @apply px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-[#5F6368] dark:text-[#9AA0A6] bg-[#F8FAFD] dark:bg-[#121212] border-b border-[#DADCE0] dark:border-[#3C4043];
+  }
+  .td-cell {
+    @apply px-4 py-3.5 text-sm text-[#202124] dark:text-[#E8EAED] border-b border-[#DADCE0] dark:border-[#3C4043]/60;
+  }
+  .tr-interactive {
+    @apply hover:bg-[#F8FAFD] dark:hover:bg-[#282A2C]/50 transition-colors;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     9. ALERT CALLOUTS
+     ═══════════════════════════════════════════════════════════ */
+  .alert-info {
+    @apply p-4 rounded-xl border border-[#D2E3FC] bg-[#E8F0FE] dark:bg-[#1A73E8]/10 dark:border-[#1A73E8]/30 text-[#1967D2] dark:text-[#8AB4F8] text-sm flex items-start gap-3;
+  }
+  .alert-success {
+    @apply p-4 rounded-xl border border-[#CEEAD6] bg-[#E6F4EA] dark:bg-[#34A853]/10 dark:border-[#34A853]/30 text-[#137333] dark:text-[#81C995] text-sm flex items-start gap-3;
+  }
+  .alert-warning {
+    @apply p-4 rounded-xl border border-[#FEEFC3] bg-[#FEF7E0] dark:bg-[#FBBC04]/10 dark:border-[#FBBC04]/30 text-[#B06000] dark:text-[#FDD663] text-sm flex items-start gap-3;
+  }
+  .alert-error {
+    @apply p-4 rounded-xl border border-[#FAD2CF] bg-[#FCE8E6] dark:bg-[#EA4335]/10 dark:border-[#EA4335]/30 text-[#C5221F] dark:text-[#F28B82] text-sm flex items-start gap-3;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     10. IXRLABS DESIGN SYSTEM (Sciences & VR Labs)
+     ═══════════════════════════════════════════════════════════ */
+  .sec-pad {
+    @apply py-16 lg:py-24;
+  }
+  .eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.14em] text-[#005689] dark:text-[#4DB1DA] mb-3 inline-block;
+  }
+  .hero-eyebrow {
+    @apply text-xs font-bold uppercase tracking-[0.16em] text-[#086FA6] dark:text-[#4DB1DA] mb-4 inline-block;
+  }
+  .hero-h1 {
+    @apply text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0D4979] dark:text-white tracking-tight leading-[1.15];
+  }
+  .hero-lead {
+    @apply text-base sm:text-lg text-[#334155] dark:text-[#94A3B8] leading-relaxed;
+  }
+  .lift {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hi;
+  }
+  .card-ixr {
+    @apply bg-white dark:bg-[#1E1F20] rounded-card border border-[#E2E8F0] dark:border-[#3C4043] shadow-card transition-all duration-300;
+  }
+  .discipline-chip {
+    @apply inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#EDF5FA] dark:bg-[#1E293B] text-[#0D4979] dark:text-[#4DB1DA] border border-[#D5E9F0] dark:border-[#334155] hover:bg-[#D5E9F0] transition-all cursor-pointer;
+  }
+  .discipline-chip.is-active {
+    @apply bg-[#005689] text-white border-[#005689] shadow-btn;
+  }
+  .btn-ixr-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-btn font-bold text-sm bg-[#005689] hover:bg-[#0D4979] text-white shadow-btn hover:shadow-btn-hi active:scale-[0.98] transition-all cursor-pointer;
+  }
+  .btn-ixr-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-btn font-bold text-sm bg-white hover:bg-[#EDF5FA] border-2 border-[#005689] text-[#005689] shadow-xs active:scale-[0.98] transition-all cursor-pointer;
+  }
+  .cta-gradient {
+    background: linear-gradient(315deg, #0D4979 0%, #005689 55%, #086FA6 100%);
+  }
+}
+
+/* Fluid Motion & Keyframes */
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeSlideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(25px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeScaleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.cseel-motion-card {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cseel-motion-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -8px rgba(0, 60, 110, 0.12);
+}
+
+/* Logo carousel animation */
+@keyframes scroll-logos {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll-logos {
+  animation: scroll-logos 35s linear infinite;
+}
+
+.animate-scroll-logos:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scroll-logos-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-scroll-logos-reverse {
+  animation: scroll-logos-reverse 38s linear infinite;
+}
+
+.animate-scroll-logos-reverse:hover {
+  animation-play-state: paused;
+}
+
+/* ===================================================== */
+/* iXRLabs-style Logo Marquee (School Trust Strip)       */
+/* ===================================================== */
+.logo-marquee {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  /* edge fade */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+.logo-marquee__track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: fit-content;
+  animation: logo-marquee-scroll 36s linear infinite;
+}
+.logo-marquee:hover .logo-marquee__track {
+  animation-play-state: paused;
+}
+.logo-marquee__item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 40px;
+  flex-shrink: 0;
+}
+.logo-marquee__item img {
+  height: 40px;
+  width: auto;
+  max-width: 130px;
+  object-fit: contain;
+  filter: grayscale(100%);
+  opacity: 0.55;
+  transition: filter 0.3s ease, opacity 0.3s ease;
+}
+.logo-marquee__item:hover img {
+  filter: grayscale(0%);
+  opacity: 1;
+}
+@keyframes logo-marquee-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Text-only school name marquee variant */
+.name-marquee {
+  overflow: hidden;
+  width: 100%;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+.name-marquee__track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: fit-content;
+  animation: logo-marquee-scroll 40s linear infinite;
+}
+.name-marquee:hover .name-marquee__track {
+  animation-play-state: paused;
+}
+.name-marquee__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 28px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 600;
+  color: #64748B;
+  transition: color 0.2s;
+  cursor: default;
+}
+.name-marquee__item:hover {
+  color: #005689;
+}
+.name-marquee__sep {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #CBD5E1;
+  flex-shrink: 0;
+}
+
+/* ===================================================== */
+/* Unified School Marquee: logo + name move together     */
+/* ===================================================== */
+.school-marquee {
+  overflow: hidden;
+  width: 100%;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+}
+.school-marquee__track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: fit-content;
+  animation: logo-marquee-scroll 38s linear infinite;
+}
+.school-marquee:hover .school-marquee__track {
+  animation-play-state: paused;
+}
+/* Each card: logo on top, name below */
+.school-marquee__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 0 36px;
+  flex-shrink: 0;
+  cursor: default;
+  transition: opacity 0.25s;
+}
+.school-marquee__card:hover {
+  opacity: 1 !important;
+}
+/* Logo container */
+.school-marquee__logo {
+  width: 64px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.school-marquee__logo img {
+  max-height: 52px;
+  max-width: 64px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: grayscale(100%);
+  opacity: 0.5;
+  transition: filter 0.3s ease, opacity 0.3s ease;
+}
+.school-marquee__card:hover .school-marquee__logo img {
+  filter: grayscale(0%);
+  opacity: 1;
+}
+/* Initials fallback badge */
+.school-marquee__initials {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.25s;
+}
+.school-marquee__card:hover .school-marquee__initials {
+  opacity: 1;
+}
+/* School name text */
+.school-marquee__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748B;
+  white-space: nowrap;
+  transition: color 0.2s;
+  text-align: center;
+}
+.school-marquee__card:hover .school-marquee__name {
+  color: #005689;
+}
+
+/* ===================================================== */
+/* Domain Card Overlays — themed from global CSS vars    */
+/* Change --domain-card-N-from/to in :root to restyle   */
+/* ===================================================== */
+.domain-card-overlay-1 {
+  background: linear-gradient(135deg, var(--domain-card-1-from), var(--domain-card-1-to));
+}
+.domain-card-overlay-2 {
+  background: linear-gradient(135deg, var(--domain-card-2-from), var(--domain-card-2-to));
+}
+.domain-card-overlay-3 {
+  background: linear-gradient(135deg, var(--domain-card-3-from), var(--domain-card-3-to));
+}
+
+/* Domain cards — headings use dark navy theme color (frosted light card design) */
+.domain-card h1,
+.domain-card h2,
+.domain-card h3,
+.domain-card h4,
+.domain-card h5,
+.domain-card h6,
+.domain-card:hover h1,
+.domain-card:hover h2,
+.domain-card:hover h3,
+.domain-card:hover h4,
+.domain-card:hover h5,
+.domain-card:hover h6 {
+  color: #005689 !important;
+}
+
+/* Hero gradient background */
+.hero-gradient {
+  background: linear-gradient(180deg, hsl(var(--hero-gradient-start)) 0%, hsl(var(--hero-gradient-end)) 100%);
+}
+
+/* About hero gradient */
+.about-hero-gradient {
+  background: linear-gradient(135deg, hsl(207 100% 21.6%) 0%, hsl(207 100% 35%) 100%);
+}
+
+/* Cross-browser scrollbar hiding */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+/* ══════════════════════════════════════════════════════════
+   ULTRA-THIN SLEEK SCROLLBAR (Gmail / Apple Mail / Notion Style)
+   ══════════════════════════════════════════════════════════ */
+
+/* Firefox standard */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.45) transparent;
+}
+
+/* WebKit / Chromium (Chrome, Edge, Opera, Safari) */
+::-webkit-scrollbar {
+  width: 4px; /* Ultra-thin vertical scrollbar */
+  height: 4px; /* Ultra-thin horizontal scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.75);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgba(71, 85, 105, 0.9);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ─── A4 Perfect Print & PDF Export Styles ─── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 12mm 14mm 12mm;
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 8pt;
+      color: #64748b;
+      font-family: inherit;
+    }
+    @bottom-left {
+      content: "CSEEL Verified Faculty Resume • www.cseel.org";
+      font-size: 8pt;
+      color: #64748b;
+      font-family: inherit;
+    }
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 9.5pt !important;
+    line-height: 1.35 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide web chrome, top headers, navigation & interactive UI */
+  #site-topbar,
+  #site-navbar,
+  header,
+  nav,
+  footer,
+  aside,
+  .no-print,
+  .print-hidden,
+  .print\:hidden,
+  button,
+  .fixed:not(.printable-container),
+  .hero-swiper-prev,
+  .hero-swiper-next,
+  .hero-swiper-pagination,
+  #experiments-grid,
+  .swiper,
+  .experiment-page-body {
+    display: none !important;
+  }
+
+  /* Prevent sections, cards, and tables from breaking across pages awkwardly */
+  .resume-section,
+  .print-avoid-break,
+  .print\:break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Never leave lonely headings at the bottom of a page */
+  h1, h2, h3, h4, h5, h6 {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  table {
+    page-break-inside: auto;
+    width: 100% !important;
+  }
+
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  /* Ensure printable lab manual is fully visible and nicely formatted */
+  .printable-lab-manual {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    page-break-inside: auto;
+  }
+
+  .printable-lab-manual h1,
+  .printable-lab-manual h2,
+  .printable-lab-manual h3,
+  .printable-lab-manual h4 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+}
+
+/* Core Web Vitals: DOM Containment for Long Virtualized / Catalog Grids */
+.cv-contain-cards {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 380px;
+}
+
+.cv-contain-list-item {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 120px;
+}
+
+/* WCAG 2.2 Minimum Mobile Touch Target Enforcement */
+@media (max-width: 768px) {
+  .touch-target-min {
+    min-height: 48px;
+    min-width: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* ── Material Circular Progress Loader Animations ── */
+@keyframes m3-rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes m3-dash {
+  0% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -35px;
+  }
+  100% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -124px;
+  }
+}
+@keyframes m3-colors {
+  0%, 100% {
+    stroke: #00A3FF;
+  }
+  25% {
+    stroke: #EA4335;
+  }
+  50% {
+    stroke: #FFB703;
+  }
+  75% {
+    stroke: #007F5F;
+  }
+}
+.m3-path-multicolor {
+  stroke-dasharray: 1, 200;
+  stroke-dashoffset: 0;
+  animation: m3-dash 1.4s ease-in-out infinite, m3-colors 5.6s ease-in-out infinite;
+}
+.m3-path-single {
+  stroke-dasharray: 1, 200;
+  stroke-dashoffset: 0;
+  animation: m3-dash 1.4s ease-in-out infinite;
+}
+
+/* ========================================================================= */
+/* iXRLabs Custom Design System Tokens & Utility Classes                     */
+/* ========================================================================= */
+.sec-pad {
+  padding-top: 4.5rem;
+  padding-bottom: 4.5rem;
+}
+@media (min-width: 1024px) {
+  .sec-pad {
+    padding-top: 6rem;
+    padding-bottom: 6rem;
+  }
+}
+.eyebrow {
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #005689;
+}
+.hero-eyebrow {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #005689;
+}
+.hero-h1 {
+  font-size: clamp(32px, 4vw, 54px);
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: #0D4979;
+}
+.hero-lead {
+  font-size: 18px;
+  color: #1F2937;
+  line-height: 1.65;
+}
+.rounded-card {
+  border-radius: 18px;
+}
+.rounded-btn {
+  border-radius: 12px;
+}
+.tl-item { 
+  position: relative; 
+  padding-left: 40px; 
+  padding-bottom: 34px; 
+  border-left: 2px solid #D5E9F0; 
+}
+.tl-item:last-child { 
+  border-left-color: transparent; 
+  padding-bottom: 0; 
+}
+.tl-dot { 
+  position: absolute; 
+  left: -9px; 
+  top: 2px; 
+  width: 16px; 
+  height: 16px; 
+  border-radius: 999px; 
+  background: #005689; 
+  border: 3px solid #fff; 
+  box-shadow: 0 0 0 2px #D5E9F0; 
+}
+.tl-year { 
+  font-size: 14px; 
+  font-weight: 800; 
+  letter-spacing: 0.06em; 
+  color: #D71F27; 
+  text-transform: uppercase; 
+}
+.lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 40px rgba(13, 73, 121, 0.13), 0 2px 6px rgba(13, 73, 121, 0.06);
+}
+.thumb-zoom {
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+}
+.thumb-zoom img {
+  transition: transform 0.5s ease;
+}
+.thumb-zoom:hover img {
+  transform: scale(1.04);
+}
+.btn-on-blue {
+  background: #ffffff;
+  color: #005689;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+.btn-on-blue:hover {
+  background: #EDF5FA;
+  transform: translateY(-1px);
+}
+.btn-ghost-white {
+  background: transparent;
+  color: #ffffff;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+.btn-ghost-white:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: #ffffff;
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #005689;
+  border: 1.5px solid #005689;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.btn-secondary:hover {
+  background: #EDF5FA;
+}
+
+.faq {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  margin-bottom: 12px;
+  padding: 18px 22px;
+  transition: all 0.25s ease;
+}
+.faq[open] {
+  box-shadow: 0 4px 20px rgba(13, 73, 121, 0.08);
+  border-color: #005689;
+}
+.faq summary {
+  font-weight: 700;
+  color: #0D4979;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style: none;
+  font-size: 17px;
+  user-select: none;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary svg {
+  transition: transform 0.2s ease;
+}
+.faq[open] summary svg {
+  transform: rotate(45deg);
+}
+.faq .answer {
+  margin-top: 14px;
+  color: #334155;
+  font-size: 15.5px;
+  line-height: 1.7;
+}
+
+.chat-bubble {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px 20px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 20px rgba(13, 73, 121, 0.08);
+  font-size: 14.5px;
+  color: #1e293b;
+  position: relative;
+  line-height: 1.5;
+}
+.chat-bubble .who {
+  font-weight: 800;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.discipline-chip {
+  padding: 7px 18px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid #D5E9F0;
+  background: #ffffff;
+  color: #334155;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.discipline-chip:hover, .discipline-chip.is-active {
+  background: #005689 !important;
+  color: #ffffff !important;
+  border-color: #005689 !important;
+}
+
+/* ========================================================================= */
+/* iXRLabs Blog Exact Pagination & Button CSS                                */
+/* ========================================================================= */
+#blog-pagination .page-btn {
+  padding: 8px 14px !important;
+  border-radius: 12px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #334155 !important;
+  background: #ffffff !important;
+  transition: color 160ms, border-color 160ms, background-color 160ms;
+  cursor: pointer;
+}
+
+#blog-pagination .page-btn:hover:not(:disabled):not(.active) {
+  border-color: #005689 !important;
+  color: #005689 !important;
+}
+
+#blog-pagination .page-btn.active {
+  background: #005689 !important;
+  color: #ffffff !important;
+  border-color: #005689 !important;
+  pointer-events: none;
+}
+
+#blog-pagination .page-btn:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
+/* ========================================================================= */
+/* iXRLabs Blog Detail Article & Table of Contents (TOC) CSS                 */
+/* ========================================================================= */
+.prose-article {
+  font-size: 18px;
+  line-height: 1.78;
+  color: #334155;
+}
+.prose-article > p {
+  margin-bottom: 24px;
+}
+.prose-article h2 {
+  font-size: clamp(22px, 2.2vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #005689 !important;
+  margin: 44px 0 16px;
+  scroll-margin-top: 100px;
+}
+.prose-article h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #005689 !important;
+  margin: 30px 0 12px;
+  scroll-margin-top: 100px;
+}
+.prose-article h4 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #005689 !important;
+  margin: 22px 0 10px;
+}
+.prose-article ul {
+  margin: 0 0 26px;
+  padding-left: 0;
+  list-style: none;
+}
+.prose-article ul li {
+  position: relative;
+  padding-left: 28px;
+  margin-bottom: 12px;
+}
+.prose-article ul li::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 12px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #005689;
+}
+.prose-article ol {
+  margin: 0 0 26px;
+  padding-left: 24px;
+}
+.prose-article ol li {
+  margin-bottom: 12px;
+}
+.prose-article blockquote {
+  border-left: 4px solid #005689;
+  padding: 12px 20px;
+  margin: 32px 0;
+  font-size: clamp(18px, 1.8vw, 22px);
+  font-weight: 600;
+  color: #005689 !important;
+  line-height: 1.5;
+  background: #EDF5FA;
+  border-radius: 0 12px 12px 0;
+}
+.prose-article a.inline {
+  color: #005689;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.toc-link {
+  display: block;
+  padding: 7px 0;
+  font-size: 14px;
+  color: #64748B;
+  border-left: 2px solid #E2E8F0;
+  padding-left: 16px;
+  transition: color 160ms, border-color 160ms;
+  text-decoration: none;
+}
+.toc-link:hover,
+.toc-link.active {
+  color: #005689 !important;
+  border-color: #005689 !important;
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LABSTER WEBFLOW COMPATIBILITY & GLOBAL STYLES
+   ═══════════════════════════════════════════════════════════ */
+.w-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #006FCC;
+  color: #FFFFFF !important;
+  font-family: 'Montserrat', -apple-system, sans-serif;
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 12px 24px;
+  text-decoration: none;
+  line-height: 1.3;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+.w-button:hover {
+  background-color: #005499;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 111, 204, 0.35);
+}
+
+.w-button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FFFFFF;
+  color: #003C6E !important;
+  border: 1px solid #CBD5E1;
+  font-family: 'Montserrat', -apple-system, sans-serif;
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 12px 24px;
+  text-decoration: none;
+  line-height: 1.3;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+.w-button-secondary:hover {
+  background-color: #F8FAFC;
+  border-color: #94A3B8;
+  transform: translateY(-1px);
+}
+
+/* Global Forms & Input Styling */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea,
+.w-input,
+.w-select {
+  font-family: 'Lato', -apple-system, sans-serif;
+  border-radius: 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:not([type="checkbox"]):not([type="radio"]):focus,
+select:focus,
+textarea:focus,
+.w-input:focus,
+.w-select:focus {
+  border-color: #006FCC !important;
+  box-shadow: 0 0 0 3px rgba(0, 111, 204, 0.15) !important;
+  outline: none !important;
+}
+
+/* Global Swiper Pagination (Labster Blue) */
+.swiper-pagination-bullet {
+  transition: all 0.3s ease;
+}
+.swiper-pagination-bullet-active {
+  background: #006FCC !important;
+  width: 24px !important;
+  border-radius: 9999px !important;
+}
+
+
+
+
+
+
+
+/* Reset any unwanted focus rings / pill highlights for clean search inputs */
+.search-clean-input,
+.search-clean-input:focus,
+.search-clean-input:focus-visible,
+.search-clean-input:active,
+input.search-clean-input,
+input.search-clean-input:focus,
+input.search-clean-input:focus-visible,
+input.search-clean-input:active {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  outline-offset: 0 !important;
+  border-radius: 0 !important;
+  background-color: transparent !important;
+}

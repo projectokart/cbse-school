@@ -1,0 +1,22 @@
+{
+  "delhi public school__south west delhi__delhi": {
+    "lat": 28.60595,
+    "lng": 77.04741,
+    "source": "schools_database_exact"
+  },
+  "pm shri kendriya vidyalaya no i__south andaman__andaman nicobar": {
+    "lat": 11.6561,
+    "lng": 92.72574,
+    "source": "schools_database_exact"
+  },
+  "ryan international school__gurugram__haryana": {
+    "lat": 28.36361,
+    "lng": 77.0632,
+    "source": "schools_database_exact"
+  },
+  "dav public school__patna__bihar": {
+    "lat": 25.60242,
+    "lng": 85.04203,
+    "source": "schools_database_exact"
+  }
+}

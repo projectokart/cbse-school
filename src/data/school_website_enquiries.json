@@ -1,0 +1,109 @@
+{
+  "enquiries": [
+    {
+      "id": "lead_1792316976040_d1rfr",
+      "school_name": "St. Mary Convent Boarding School",
+      "person_name": "Sister Agnes (Principal)",
+      "email": "principal@stmaryconvent.edu.in",
+      "contact_number": "9876543210",
+      "notes": "Please share the complete catalog of 50+ school website templates and design architectures for our school.",
+      "template_name": "Request for 50+ More School Website Templates Catalog",
+      "template_link": "https://cseel.org/freelancers/#more-templates",
+      "ip": "::1",
+      "device_id": "dev_1792316972811_szhs71zf",
+      "createdAt": "2026-10-18T09:49:36.040Z",
+      "source": "Dev Sharma School Portfolio"
+    },
+    {
+      "id": "lead_1792316033927_0e9dx",
+      "school_name": "Delhi Public School Verification Test",
+      "person_name": "Devender Sharma (Principal)",
+      "email": "dev@mailer.cseel.org",
+      "contact_number": "9050778830",
+      "notes": "We require a complete modern CBSE website with online admission portal, mandatory disclosure tabs, and fees enquiry integration.",
+      "template_name": "DPS International School Portal",
+      "template_link": "https://cseel.org/freelancers/projects/dps-international",
+      "ip": "::1",
+      "device_id": "dev_1792316031793_c9bubnj3",
+      "createdAt": "2026-10-18T09:33:53.927Z",
+      "source": "Dev Sharma School Portfolio"
+    },
+    {
+      "id": "lead_1792315360287_i105i",
+      "school_name": "DPS Modern Academy",
+      "person_name": "Dr. Sharma",
+      "email": "principal@dpsmodern.edu.in",
+      "contact_number": "9876543210",
+      "notes": "We need a CBSE compliant website with mandatory disclosures and admission form.",
+      "template_name": "Template #1: DPS International",
+      "template_link": "https://cseel.org/projects/1",
+      "ip": "::1",
+      "device_id": "fallback_::1",
+      "createdAt": "2026-10-18T09:22:40.288Z",
+      "source": "Dev Sharma School Portfolio"
+    },
+    {
+      "id": "lead_1792314367540_scwdk",
+      "school_name": "dec",
+      "person_name": "bjhjb",
+      "contact_number": "y78678678",
+      "notes": "",
+      "createdAt": "2026-10-18T09:06:07.540Z",
+      "source": "Dev Sharma School Portfolio"
+    },
+    {
+      "id": "lead_1792303531249_eqz06",
+      "school_name": "Delhi Public School, R.K. Puram",
+      "person_name": "Principal Sharma",
+      "contact_number": "9876543210",
+      "notes": "Testing Brevo API and fallback email routing to ptdevkaushik102@gmail.com",
+      "createdAt": "2026-10-18T06:05:31.249Z",
+      "source": "Dev Sharma School Portfolio"
+    },
+    {
+      "id": "lead_1792301973889_j8xcx",
+      "school_name": "Springdales Senior Secondary School",
+      "person_name": "Principal R. K. Sharma",
+      "contact_number": "9050778830",
+      "notes": "Live test lead directly to ptdevkaushik101@gmail.com",
+      "createdAt": "2026-10-18T05:39:33.889Z",
+      "source": "Dev Sharma School Portfolio"
+    },
+    {
+      "id": "lead_1792301363474_w5ed0",
+      "school_name": "Delhi World Public School (Test Lead)",
+      "person_name": "Principal Sharma",
+      "contact_number": "9050778830",
+      "notes": "Verified test submission for ptdevkaushik101@gmail.com",
+      "createdAt": "2026-10-18T05:29:23.474Z",
+      "source": "Dev Sharma School Portfolio"
+    },
+    {
+      "id": "lead_1792300518329_bbgei",
+      "school_name": "sd internation school",
+      "person_name": "Dev",
+      "contact_number": "9050778830",
+      "notes": "jhbjxhasbjh",
+      "createdAt": "2026-10-18T05:15:18.329Z",
+      "source": "Dev Sharma School Portfolio"
+    },
+    {
+      "id": "lead_1792299084544_p1d5n",
+      "school_name": "Green Valley International School",
+      "person_name": "Principal Dr. Verma",
+      "contact_number": "9876543210",
+      "notes": "Need CBSE mandatory disclosure and admission portal",
+      "createdAt": "2026-10-18T04:51:24.544Z",
+      "source": "Dev Sharma School Portfolio"
+    },
+    {
+      "id": "lead_1792294908247_5z516",
+      "school_name": "Delhi Public School",
+      "person_name": "Principal Dr. Sharma",
+      "contact_number": "9050778830",
+      "notes": "Need online admission portal and CBSE mandatory disclosures",
+      "createdAt": "2026-10-18T03:41:48.247Z",
+      "source": "Dev Sharma School Portfolio"
+    }
+  ]
+}

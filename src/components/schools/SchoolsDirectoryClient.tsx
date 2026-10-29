@@ -322,6 +322,15 @@ export default function SchoolsDirectoryClient({ initialData }: Props) {
   const [mapFocus, setMapFocus] = useState<{ lat: number; lng: number; zoom?: number; timestamp: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
 
+  // Dedicated "School Near Me" Toggle & Radius Results States
+  const [isNearMeActive, setIsNearMeActive] = useState<boolean>(false);
+  const [nearMeSchools, setNearMeSchools] = useState<SchoolRecord[]>([]);
+  const [nearMeTotalCount, setNearMeTotalCount] = useState<number>(0);
+  const [nearMeTotalPages, setNearMeTotalPages] = useState<number>(1);
+  const [nearMeCurrentPage, setNearMeCurrentPage] = useState<number>(1);
+  const [nearMePoints, setNearMePoints] = useState<any[]>([]);
+  const [isNearMeLoading, setIsNearMeLoading] = useState<boolean>(false);
+
   // Map display, drawer and pagination states
   const [mapDisplayMode, setMapDisplayMode] = useState<'page' | 'accumulate' | 'all_dots'>('page');
   const [accumulatedSchools, setAccumulatedSchools] = useState<SchoolRecord[]>([]);
@@ -532,6 +541,71 @@ export default function SchoolsDirectoryClient({ initialData }: Props) {
       );
     }
   }, []);
+
+  // ── Dedicated "School Near Me" Fetch & Toggle Functions ──
+  const fetchNearMeSchools = useCallback(
+    async (page = 1, radius = mapRadiusKm, lat = searchCenter.lat, lng = searchCenter.lng) => {
+      if (!lat || !lng) return;
+      setIsNearMeLoading(true);
+      try {
+        const effectiveRad = Math.min(25, Math.max(1, radius));
+        const res = await fetch(
+          `/api/schools-directory?near_me=true&lat=${lat}&lng=${lng}&radius=${effectiveRad}&page=${page}&limit=25`
+        );
+        const data = await res.json();
+        if (data.success) {
+          setNearMeSchools(data.schools || []);
+          setNearMeTotalCount(data.totalCount || 0);
+          setNearMeTotalPages(data.totalPages || 1);
+          setNearMeCurrentPage(data.currentPage || page);
+          setNearMePoints(data.allNearPoints || []);
+        }
+      } catch (err) {
+        console.warn('Failed to fetch near me schools:', err);
+      } finally {
+        setIsNearMeLoading(false);
+      }
+    },
+    [mapRadiusKm, searchCenter.lat, searchCenter.lng]
+  );
+
+  const toggleNearMeMode = useCallback(() => {
+    const nextState = !isNearMeActive;
+    setIsNearMeActive(nextState);
+    if (nextState) {
+      setSearchMode('near_me');
+      setSortBy('distance_asc');
+      if (typeof window !== 'undefined' && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const { latitude, longitude } = pos.coords;
+            setSearchCenter({ lat: latitude, lng: longitude });
+            setMapFocus({ lat: latitude, lng: longitude, zoom: 13, timestamp: Date.now() });
+            fetchNearMeSchools(1, mapRadiusKm, latitude, longitude);
+          },
+          () => {
+            fetchNearMeSchools(1, mapRadiusKm, searchCenter.lat, searchCenter.lng);
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      } else {
+        fetchNearMeSchools(1, mapRadiusKm, searchCenter.lat, searchCenter.lng);
+      }
+    } else {
+      setSearchMode('text');
+      setSortBy('popularity_desc');
+    }
+  }, [isNearMeActive, mapRadiusKm, searchCenter.lat, searchCenter.lng, fetchNearMeSchools]);
+
+  const handleRadiusChange = useCallback(
+    (km: number) => {
+      if (!isNearMeActive) return; // Distance selection disabled when toggle is off
+      const cappedKm = Math.min(25, Math.max(1, km));
+      setMapRadiusKm(cappedKm);
+      fetchNearMeSchools(1, cappedKm, searchCenter.lat, searchCenter.lng);
+    },
+    [isNearMeActive, searchCenter.lat, searchCenter.lng, fetchNearMeSchools]
+  );
 
   // ── Access Control: Logged-in users immediately get verified access ───────
   const { user, loading: authLoading, isVerified, signInWithGoogle, verifyUser } = useAuth();
@@ -757,15 +831,6 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
       // Near Me Mode: strictly filter only schools within maximum radius of 25 km
       list = list.filter((s) => s.distance !== undefined && s.distance <= 25);
       list = list.sort((a, b) => (a.distance ?? 99999) - (b.distance ?? 99999));
-    } else if ((viewMode as string) === 'map') {
-      // Map View: Filter by Radius (strictly capped at 25 km max) & sort by closest distance
-      const effectiveRadius = Math.min(25, mapRadiusKm || 25);
-      const inRadius = list.filter((s) => s.distance !== undefined && s.distance <= effectiveRadius);
-      if (inRadius.length > 0) {
-        list = inRadius.sort((a, b) => (a.distance || 0) - (b.distance || 0));
-      } else {
-        list = list.sort((a, b) => (a.distance ?? 9999) - (b.distance ?? 9999));
-      }
     }
 
     // 4. Curriculum Board Filtering
@@ -957,21 +1022,31 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
   ]);
 
   const schoolsForMap = useMemo(() => {
-    // Map view must ONLY show the exact schools that are currently displayed in the list view (active page batch)!
+    if (isNearMeActive) {
+      return nearMeSchools.slice(0, 25);
+    }
     return displayedSchools.slice(0, 25);
-  }, [displayedSchools]);
+  }, [isNearMeActive, nearMeSchools, displayedSchools]);
 
   const mapFilteredSchools = useMemo(() => {
-    if (!mapListSearch.trim()) return schoolsForMap;
+    const baseList = isNearMeActive ? nearMeSchools : schoolsForMap;
+    if (!mapListSearch.trim()) return baseList;
     const q = mapListSearch.toLowerCase().trim();
-    return schoolsForMap.filter((s) =>
+    return baseList.filter((s) =>
       (s.school_name || s.name || '').toLowerCase().includes(q) ||
       (s.village_ward || '').toLowerCase().includes(q) ||
       (s.district_name || '').toLowerCase().includes(q) ||
       (s.board || '').toLowerCase().includes(q) ||
       (s.udise_code || '').includes(q)
     );
-  }, [schoolsForMap, mapListSearch]);
+  }, [isNearMeActive, nearMeSchools, schoolsForMap, mapListSearch]);
+
+  const effectiveDisplaySchools = useMemo(() => {
+    if (isNearMeActive) {
+      return nearMeSchools;
+    }
+    return displayedSchools;
+  }, [isNearMeActive, nearMeSchools, displayedSchools]);
 
   const handleSelectSchoolFromList = (school: SchoolRecord, fromMapMarker = false) => {
     setMapSelectedSchool(school);
@@ -1139,8 +1214,10 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
   // Smart page numbers array for pagination
   const paginationPages = useMemo(() => {
-    const total = Math.max(1, totalPages);
-    const current = Math.min(Math.max(1, currentPage), total);
+    const total = isNearMeActive ? Math.max(1, nearMeTotalPages) : Math.max(1, totalPages);
+    const current = isNearMeActive
+      ? Math.min(Math.max(1, nearMeCurrentPage), total)
+      : Math.min(Math.max(1, currentPage), total);
     if (total <= 7) {
       return Array.from({ length: total }, (_, i) => i + 1);
     }
@@ -1151,13 +1228,21 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
       return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
     }
     return [1, '...', current - 1, current, current + 1, '...', total];
-  }, [totalPages, currentPage]);
+  }, [totalPages, currentPage, isNearMeActive, nearMeTotalPages, nearMeCurrentPage]);
 
   // Reusable Top & Bottom Pagination Bar (Labster Design System)
   const renderPaginationBar = (position: 'top' | 'bottom') => {
-    const pageCount = displayedSchools.length;
-    const startItem = totalSchoolsCount === 0 || pageCount === 0 ? 0 : (currentPage - 1) * 25 + 1;
-    const endItem = totalSchoolsCount === 0 || pageCount === 0 ? 0 : Math.min((currentPage - 1) * 25 + pageCount, totalSchoolsCount);
+    const activeCurrentPage = isNearMeActive ? nearMeCurrentPage : currentPage;
+    const activeTotalPages = isNearMeActive ? nearMeTotalPages : totalPages;
+    const isPageLoading = isNearMeActive ? isNearMeLoading : isLoadingMore;
+
+    const onGoPage = (p: number) => {
+      if (isNearMeActive) {
+        fetchNearMeSchools(p);
+      } else {
+        handlePageChange(p);
+      }
+    };
 
     return (
       <div
@@ -1169,8 +1254,8 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
         <div className="inline-flex items-center gap-1 p-1 bg-white rounded-2xl border border-gray-200 shadow-2xs">
           <button
             type="button"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage <= 1 || isLoadingMore}
+            onClick={() => onGoPage(activeCurrentPage - 1)}
+            disabled={activeCurrentPage <= 1 || isPageLoading}
             className="inline-flex items-center gap-1 h-8 px-2.5 sm:px-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 text-gray-700 hover:text-[#006FCC] text-xs font-bold transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
             title="Previous Page"
           >
@@ -1187,10 +1272,10 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
               <button
                 key={`page-${position}-${p}`}
                 type="button"
-                onClick={() => handlePageChange(Number(p))}
-                disabled={isLoadingMore}
+                onClick={() => onGoPage(Number(p))}
+                disabled={isPageLoading}
                 className={`min-w-[30px] sm:min-w-[34px] h-8 px-2 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer flex items-center justify-center ${
-                  currentPage === Number(p)
+                  activeCurrentPage === Number(p)
                     ? 'bg-[#006FCC] hover:bg-[#005399] text-white shadow-2xs font-black'
                     : 'bg-white hover:bg-gray-100 text-gray-700 hover:text-[#006FCC]'
                 }`}
@@ -1203,8 +1288,8 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
           <button
             type="button"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages || isLoadingMore}
+            onClick={() => onGoPage(activeCurrentPage + 1)}
+            disabled={activeCurrentPage >= activeTotalPages || isPageLoading}
             className="inline-flex items-center gap-1 h-8 px-2.5 sm:px-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 text-gray-700 hover:text-[#006FCC] text-xs font-bold transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
             title="Next Page"
           >
@@ -3161,10 +3246,12 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span>
                         <strong className="text-gray-900">
-                          {totalSchoolsCount === 0 || displayedSchools.length === 0
+                          {isNearMeActive
+                            ? `${nearMeTotalCount === 0 || nearMeSchools.length === 0 ? '0' : `${(nearMeCurrentPage - 1) * 25 + 1}–${Math.min((nearMeCurrentPage - 1) * 25 + nearMeSchools.length, nearMeTotalCount)}`}`
+                            : totalSchoolsCount === 0 || displayedSchools.length === 0
                             ? '0'
                             : `${(currentPage - 1) * 25 + 1}–${Math.min((currentPage - 1) * 25 + displayedSchools.length, totalSchoolsCount)}`}
-                        </strong> of <strong className="text-gray-900">{totalSchoolsCount}</strong> Schools
+                        </strong> of <strong className="text-gray-900">{isNearMeActive ? `${nearMeTotalCount} (within ${mapRadiusKm}km)` : `${totalSchoolsCount}`}</strong> Schools
                       </span>
                       {selectedLocation && (
                         <span className="inline-flex items-center gap-0.5 text-blue-600 bg-blue-50 px-1.5 py-0.2 rounded font-medium text-[10px]">
@@ -3185,7 +3272,9 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                   <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
                     {/* Result count */}
                     <h2 className="text-xs sm:text-[13px] font-bold text-gray-800 whitespace-nowrap mr-0.5">
-                      {totalSchoolsCount === 0 || displayedSchools.length === 0
+                      {isNearMeActive
+                        ? `${nearMeTotalCount === 0 || nearMeSchools.length === 0 ? '0' : `${(nearMeCurrentPage - 1) * 25 + 1}–${Math.min((nearMeCurrentPage - 1) * 25 + nearMeSchools.length, nearMeTotalCount)}`} of ${nearMeTotalCount} Schools (within ${mapRadiusKm}km)`
+                        : totalSchoolsCount === 0 || displayedSchools.length === 0
                         ? '0 Schools'
                         : `${(currentPage - 1) * 25 + 1}–${Math.min((currentPage - 1) * 25 + displayedSchools.length, totalSchoolsCount)} of ${totalSchoolsCount} Schools`}
                     </h2>
@@ -3475,19 +3564,23 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                         /* Expanded Desktop Sheet */
                         <div className="flex flex-col h-full overflow-hidden">
                           {/* Sheet Header */}
-                          <div className="p-3.5 border-b border-gray-200 bg-slate-50/70 shrink-0 space-y-2.5">
+                          <div className="p-3 border-b border-gray-200 bg-slate-50/70 shrink-0 space-y-2">
                             {/* Title & Action Handles */}
                             <div className="flex items-center justify-between gap-1.5">
                               <div className="flex items-center gap-2 min-w-0">
-                                <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
-                                  {schoolsForMap.length}
+                                <div className={`w-7 h-7 rounded-lg text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs transition-colors ${
+                                  isNearMeActive ? 'bg-emerald-600' : 'bg-blue-600'
+                                }`}>
+                                  {isNearMeActive ? nearMeSchools.length : schoolsForMap.length}
                                 </div>
                                 <div className="truncate">
                                   <h3 className="text-xs font-bold text-gray-900 truncate">
-                                    Schools on Map
+                                    {isNearMeActive ? 'Schools Near Me' : 'Schools on Map'}
                                   </h3>
                                   <p className="text-[10px] text-gray-500 truncate">
-                                    {totalSchoolsCount} total • {mapRadiusKm}km radius
+                                    {isNearMeActive
+                                      ? `${nearMeTotalCount} schools • within ${mapRadiusKm}km`
+                                      : `${totalSchoolsCount} total • Directory`}
                                   </p>
                                 </div>
                               </div>
@@ -3537,54 +3630,36 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                               </div>
                             </div>
 
-                            {/* Compact Control Row 1: Display Mode & Batch Info */}
-                            <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                              {/* Display Mode Pills */}
-                              <div className="flex items-center bg-gray-200/80 p-0.5 rounded-lg text-[10px] font-bold">
-                                <button
-                                  type="button"
-                                  onClick={() => setMapDisplayMode('page')}
-                                  className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
-                                    mapDisplayMode === 'page'
-                                      ? 'bg-white text-blue-600 shadow-2xs'
-                                      : 'text-gray-600 hover:text-gray-900'
-                                  }`}
-                                  title="Show current page 25 schools"
-                                >
-                                  25 Page
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setMapDisplayMode('accumulate')}
-                                  className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
-                                    mapDisplayMode === 'accumulate'
-                                      ? 'bg-white text-emerald-600 shadow-2xs'
-                                      : 'text-gray-600 hover:text-gray-900'
-                                  }`}
-                                  title="Accumulate 25 points at a time on map"
-                                >
-                                  +Add ({accumulatedSchools.length})
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setMapDisplayMode('all_dots')}
-                                  className={`px-2 py-0.5 rounded-md transition cursor-pointer ${
-                                    mapDisplayMode === 'all_dots'
-                                      ? 'bg-[#EA4335] text-white shadow-2xs'
-                                      : 'text-gray-600 hover:text-gray-900'
-                                  }`}
-                                  title="Show all schools as red dots on map"
-                                >
-                                  All Dots
-                                </button>
+                            {/* School Near Me Master Toggle Bar */}
+                            <div className="flex items-center justify-between py-1 px-2.5 bg-blue-50/70 border border-blue-100 rounded-xl">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <MapPin size={13} className={isNearMeActive ? 'text-blue-600 animate-pulse shrink-0' : 'text-gray-400 shrink-0'} />
+                                <span className="text-xs font-bold text-gray-800 truncate">School Near Me</span>
+                                {isNearMeActive && (
+                                  <span className="text-[10px] bg-blue-600 text-white font-bold px-1.5 py-0.2 rounded-full shrink-0">
+                                    ON ({nearMeTotalCount})
+                                  </span>
+                                )}
                               </div>
-
-                              <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
-                                25 pts / batch
-                              </span>
+                              <button
+                                type="button"
+                                role="switch"
+                                aria-checked={isNearMeActive}
+                                onClick={toggleNearMeMode}
+                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                  isNearMeActive ? 'bg-blue-600' : 'bg-gray-300'
+                                }`}
+                                title={isNearMeActive ? 'Turn off Near Me (Switch to List Mode)' : 'Turn on School Near Me'}
+                              >
+                                <span
+                                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                    isNearMeActive ? 'translate-x-4' : 'translate-x-0'
+                                  }`}
+                                />
+                              </button>
                             </div>
 
-                            {/* Compact Control Row 2: Radius Selector & In-list Search */}
+                            {/* Control Row 1: Search & Radius Selector */}
                             <div className="flex items-center gap-1.5">
                               {/* In-list filter search input */}
                               <div className="relative flex-1 min-w-0">
@@ -3593,7 +3668,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                                   type="text"
                                   value={mapListSearch}
                                   onChange={(e) => setMapListSearch(e.target.value)}
-                                  placeholder="Filter name, board, area..."
+                                  placeholder={isNearMeActive ? 'Filter near schools...' : 'Filter name, board...'}
                                   className="w-full pl-7 pr-6 py-1 bg-white border border-gray-200 rounded-lg text-xs placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                 />
                                 {mapListSearch && (
@@ -3607,19 +3682,25 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                                 )}
                               </div>
 
-                              {/* Radius Quick Selector */}
-                              <div className="flex items-center gap-0.5 shrink-0 bg-white p-0.5 rounded-lg border border-gray-200">
+                              {/* Radius Quick Selector (Disabled when toggle is OFF) */}
+                              <div
+                                className={`flex items-center gap-0.5 shrink-0 bg-white p-0.5 rounded-lg border border-gray-200 transition ${
+                                  !isNearMeActive ? 'opacity-40 pointer-events-none cursor-not-allowed' : ''
+                                }`}
+                                title={!isNearMeActive ? 'Enable School Near Me to select distance radius' : 'Select distance radius'}
+                              >
                                 {[3, 5, 10, 25].map((km) => (
                                   <button
                                     key={km}
                                     type="button"
-                                    onClick={() => setMapRadiusKm(km)}
+                                    disabled={!isNearMeActive}
+                                    onClick={() => handleRadiusChange(km)}
                                     className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
-                                      mapRadiusKm === km
+                                      mapRadiusKm === km && isNearMeActive
                                         ? 'bg-gray-900 text-white shadow-2xs'
                                         : 'text-gray-600 hover:bg-gray-100'
                                     }`}
-                                    title={`${km} km radius`}
+                                    title={isNearMeActive ? `${km} km radius` : 'Enable School Near Me'}
                                   >
                                     {km}k
                                   </button>
@@ -3630,11 +3711,18 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
                           {/* Scrollable School Cards List */}
                           <div className="flex-1 overflow-y-auto p-2.5 space-y-2 custom-scrollbar">
-                            {mapFilteredSchools.length > 0 ? (
+                            {isNearMeLoading ? (
+                              <div className="p-8 text-center text-gray-400 text-xs flex flex-col items-center justify-center gap-2">
+                                <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                                <span>Finding schools within {mapRadiusKm}km...</span>
+                              </div>
+                            ) : mapFilteredSchools.length > 0 ? (
                               mapFilteredSchools.map((school, idx) => renderMapSchoolCard(school, idx))
                             ) : (
                               <div className="p-8 text-center text-gray-400 text-xs">
-                                No schools match &quot;{mapListSearch}&quot;
+                                {isNearMeActive
+                                  ? `No schools found within ${mapRadiusKm}km radius`
+                                  : `No schools match "${mapListSearch}"`}
                               </div>
                             )}
                           </div>
@@ -3643,21 +3731,21 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                           <div className="p-3 border-t border-gray-200 bg-slate-50 shrink-0 flex flex-col gap-2">
                             <div className="flex items-center justify-between text-xs text-gray-600 font-medium">
                               <span>
-                                Page <strong className="text-gray-900 font-bold">{currentPage}</strong> of{' '}
-                                <strong className="text-gray-900 font-bold">{totalPages}</strong>
+                                Page <strong className="text-gray-900 font-bold">{isNearMeActive ? nearMeCurrentPage : currentPage}</strong> of{' '}
+                                <strong className="text-gray-900 font-bold">{isNearMeActive ? nearMeTotalPages : totalPages}</strong>
                               </span>
                               <span className="text-[11px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
-                                {schoolsForMap.length} Schools on Map
+                                {isNearMeActive ? `${nearMeTotalCount} Near Schools` : `${schoolsForMap.length} Schools on Map`}
                               </span>
                             </div>
 
                             <div className="flex items-center gap-2 w-full">
                               <button
                                 type="button"
-                                onClick={() => handlePageChange(currentPage - 1)}
-                                disabled={currentPage <= 1 || isLoadingMore}
+                                onClick={() => isNearMeActive ? fetchNearMeSchools(nearMeCurrentPage - 1) : handlePageChange(currentPage - 1)}
+                                disabled={isNearMeActive ? (nearMeCurrentPage <= 1 || isNearMeLoading) : (currentPage <= 1 || isLoadingMore)}
                                 className="flex-1 py-2 px-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 text-gray-800 text-xs font-bold transition flex items-center justify-center gap-1 shadow-2xs disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-                                title="Previous 25 Schools on Map"
+                                title="Previous Page"
                               >
                                 <ChevronLeft size={14} />
                                 <span>Previous</span>
@@ -3665,10 +3753,10 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
                               <button
                                 type="button"
-                                onClick={() => handlePageChange(currentPage + 1)}
-                                disabled={currentPage >= totalPages || isLoadingMore}
+                                onClick={() => isNearMeActive ? fetchNearMeSchools(nearMeCurrentPage + 1) : handlePageChange(currentPage + 1)}
+                                disabled={isNearMeActive ? (nearMeCurrentPage >= nearMeTotalPages || isNearMeLoading) : (currentPage >= totalPages || isLoadingMore)}
                                 className="flex-1 py-2 px-3 rounded-xl bg-[#006FCC] hover:bg-[#005399] text-white text-xs font-bold transition flex items-center justify-center gap-1 shadow-2xs disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-                                title="Next 25 Schools on Map"
+                                title="Next Page"
                               >
                                 <span>Next</span>
                                 <ChevronRight size={14} />
@@ -3688,7 +3776,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                       className="hidden md:flex absolute top-4 left-4 z-30 items-center gap-2 px-3 py-2 bg-white/95 backdrop-blur-md rounded-full border border-gray-200 shadow-md hover:bg-white text-xs font-bold text-blue-600 transition cursor-pointer"
                     >
                       <List size={14} />
-                      <span>Show Schools List ({schoolsForMap.length})</span>
+                      <span>Show Schools List ({isNearMeActive ? nearMeSchools.length : schoolsForMap.length})</span>
                     </button>
                   )}
 
@@ -3698,28 +3786,30 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                     <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-gray-200/90 shadow-md">
                       <button
                         type="button"
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage <= 1 || isLoadingMore}
+                        onClick={() => isNearMeActive ? fetchNearMeSchools(nearMeCurrentPage - 1) : handlePageChange(currentPage - 1)}
+                        disabled={isNearMeActive ? (nearMeCurrentPage <= 1 || isNearMeLoading) : (currentPage <= 1 || isLoadingMore)}
                         className="p-1 rounded-full text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
-                        title="Previous 25 Schools on Map"
+                        title="Previous Page"
                         aria-label="Previous Page"
                       >
                         <ChevronLeft size={16} />
                       </button>
 
                       <span className="text-xs font-bold text-gray-800 whitespace-nowrap">
-                        Page {currentPage} of {totalPages}
+                        Page {isNearMeActive ? nearMeCurrentPage : currentPage} of {isNearMeActive ? nearMeTotalPages : totalPages}
                         <span className="text-gray-500 font-normal ml-1 hidden xs:inline">
-                          ({(currentPage - 1) * 25 + 1}–{Math.min(currentPage * 25, totalSchoolsCount)})
+                          {isNearMeActive
+                            ? `(${nearMeTotalCount} within ${mapRadiusKm}km)`
+                            : `(${(currentPage - 1) * 25 + 1}–${Math.min(currentPage * 25, totalSchoolsCount)})`}
                         </span>
                       </span>
 
                       <button
                         type="button"
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage >= totalPages || isLoadingMore}
+                        onClick={() => isNearMeActive ? fetchNearMeSchools(nearMeCurrentPage + 1) : handlePageChange(currentPage + 1)}
+                        disabled={isNearMeActive ? (nearMeCurrentPage >= nearMeTotalPages || isNearMeLoading) : (currentPage >= totalPages || isLoadingMore)}
                         className="p-1 rounded-full text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
-                        title="Next 25 Schools on Map"
+                        title="Next Page"
                         aria-label="Next Page"
                       >
                         <ChevronRight size={16} />
@@ -3732,8 +3822,8 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                       mapFocus={mapFocus}
                       radiusKm={Math.min(25, mapRadiusKm || 25)}
                       schools={schoolsForMap}
-                      allSchoolsDots={[]}
-                      showAllRedDots={false}
+                      allSchoolsDots={isNearMeActive ? nearMePoints : []}
+                      showAllRedDots={isNearMeActive}
                       selectedSchool={mapSelectedSchool}
                       onSelectSchool={(school) => handleSelectSchoolFromList(school as SchoolRecord, true)}
                       onOpenDetails={(school) => setDetailDrawerSchool(school as SchoolRecord)}
@@ -3852,6 +3942,35 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                     {/* Secondary Controls: Search, Radius, Mode (Shown in Half & Full mode) */}
                     {mobileSheetState !== 'peek' && (
                       <div className="px-3 py-2 border-b border-gray-100 bg-slate-50/80 space-y-1.5 shrink-0">
+                        {/* Row 0: School Near Me Master Toggle */}
+                        <div className="flex items-center justify-between py-1 px-2.5 bg-blue-50/70 border border-blue-100 rounded-xl">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <MapPin size={13} className={isNearMeActive ? 'text-blue-600 animate-pulse shrink-0' : 'text-gray-400 shrink-0'} />
+                            <span className="text-xs font-bold text-gray-800 truncate">School Near Me</span>
+                            {isNearMeActive && (
+                              <span className="text-[10px] bg-blue-600 text-white font-bold px-1.5 py-0.2 rounded-full shrink-0">
+                                ON ({nearMeTotalCount})
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={isNearMeActive}
+                            onClick={toggleNearMeMode}
+                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                              isNearMeActive ? 'bg-blue-600' : 'bg-gray-300'
+                            }`}
+                            title={isNearMeActive ? 'Turn off Near Me (Switch to List Mode)' : 'Turn on School Near Me'}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                isNearMeActive ? 'translate-x-4' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                        </div>
+
                         {/* Row 1: Search & Radius */}
                         <div className="flex items-center gap-2">
                           <div className="relative flex-1 min-w-0">
@@ -3860,7 +3979,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                               type="text"
                               value={mapListSearch}
                               onChange={(e) => setMapListSearch(e.target.value)}
-                              placeholder="Filter name, board..."
+                              placeholder={isNearMeActive ? 'Filter near schools...' : 'Filter name, board...'}
                               className="w-full pl-7 pr-6 py-1 bg-white border border-gray-200 rounded-lg text-xs placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
                             />
                             {mapListSearch && (
@@ -3874,18 +3993,25 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                             )}
                           </div>
 
-                          {/* Radius quick buttons */}
-                          <div className="flex items-center gap-0.5 shrink-0 bg-white p-0.5 rounded-lg border border-gray-200">
+                          {/* Radius quick buttons (Disabled when toggle is OFF) */}
+                          <div
+                            className={`flex items-center gap-0.5 shrink-0 bg-white p-0.5 rounded-lg border border-gray-200 transition ${
+                              !isNearMeActive ? 'opacity-40 pointer-events-none cursor-not-allowed' : ''
+                            }`}
+                            title={!isNearMeActive ? 'Enable School Near Me to select distance radius' : 'Select distance radius'}
+                          >
                             {[3, 5, 10, 25].map((km) => (
                               <button
                                 key={km}
                                 type="button"
-                                onClick={() => setMapRadiusKm(km)}
+                                disabled={!isNearMeActive}
+                                onClick={() => handleRadiusChange(km)}
                                 className={`px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer transition ${
-                                  mapRadiusKm === km
+                                  mapRadiusKm === km && isNearMeActive
                                     ? 'bg-gray-900 text-white shadow-2xs'
                                     : 'text-gray-600 hover:bg-gray-100'
                                 }`}
+                                title={isNearMeActive ? `${km} km radius` : 'Enable School Near Me'}
                               >
                                 {km}k
                               </button>
@@ -3896,7 +4022,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                         {/* Row 2: Batch Info & Map Display Mode */}
                         <div className="flex items-center justify-between gap-1 overflow-x-auto scrollbar-none">
                           <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100 shrink-0">
-                            25 pts / batch
+                            {isNearMeActive ? `${nearMeSchools.length} near schools` : '25 pts / batch'}
                           </span>
 
                           {/* Map Mode */}
@@ -3936,11 +4062,18 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                     {/* Scrollable School Cards */}
                     {mobileSheetState !== 'peek' && (
                       <div className="flex-1 overflow-y-auto p-2.5 space-y-2 touch-pan-y overscroll-contain custom-scrollbar">
-                        {mapFilteredSchools.length > 0 ? (
+                        {isNearMeLoading ? (
+                          <div className="p-8 text-center text-gray-400 text-xs flex flex-col items-center justify-center gap-2">
+                            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                            <span>Finding schools within {mapRadiusKm}km...</span>
+                          </div>
+                        ) : mapFilteredSchools.length > 0 ? (
                           mapFilteredSchools.map((school, idx) => renderMapSchoolCard(school, idx))
                         ) : (
                           <div className="p-6 text-center text-gray-400 text-xs">
-                            No schools match &quot;{mapListSearch}&quot;
+                            {isNearMeActive
+                              ? `No schools found within ${mapRadiusKm}km radius`
+                              : `No schools match "${mapListSearch}"`}
                           </div>
                         )}
                       </div>
@@ -3951,8 +4084,8 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                       <div className="p-2.5 border-t border-gray-100 bg-white flex items-center justify-between gap-2 shrink-0">
                         <button
                           type="button"
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          disabled={currentPage <= 1 || isLoadingMore}
+                          onClick={() => isNearMeActive ? fetchNearMeSchools(nearMeCurrentPage - 1) : handlePageChange(currentPage - 1)}
+                          disabled={isNearMeActive ? (nearMeCurrentPage <= 1 || isNearMeLoading) : (currentPage <= 1 || isLoadingMore)}
                           className="px-3 py-1.5 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold transition flex items-center gap-1 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
                         >
                           <ChevronLeft size={13} />
@@ -3961,17 +4094,19 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
                         <div className="text-center">
                           <div className="text-[11px] font-black text-gray-800">
-                            Page {currentPage} of {totalPages}
+                            Page {isNearMeActive ? nearMeCurrentPage : currentPage} of {isNearMeActive ? nearMeTotalPages : totalPages}
                           </div>
                           <div className="text-[10px] text-gray-500 font-medium">
-                            {schoolsForMap.length} / {totalSchoolsCount} Schools
+                            {isNearMeActive
+                              ? `${nearMeTotalCount} within ${mapRadiusKm}km`
+                              : `${schoolsForMap.length} / ${totalSchoolsCount} Schools`}
                           </div>
                         </div>
 
                         <button
                           type="button"
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={currentPage >= totalPages || isLoadingMore}
+                          onClick={() => isNearMeActive ? fetchNearMeSchools(nearMeCurrentPage + 1) : handlePageChange(currentPage + 1)}
+                          disabled={isNearMeActive ? (nearMeCurrentPage >= nearMeTotalPages || isNearMeLoading) : (currentPage >= totalPages || isLoadingMore)}
                           className="px-3 py-1.5 rounded-xl bg-[#006FCC] hover:bg-[#005399] text-white text-xs font-bold transition flex items-center gap-1 disabled:opacity-40 disabled:pointer-events-none cursor-pointer shadow-2xs"
                         >
                           <span>Next</span>
@@ -3983,19 +4118,19 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                 </div>
               ) : (viewMode as string) === 'compact' ? (
                 <div className="flex flex-col gap-2.5 sm:gap-3 touch-pan-y overscroll-contain mt-2 sm:mt-2.5 w-full">
-                  {displayedSchools.slice(0, 25).map((school, idx) => renderCompactSchoolRow(school, idx))}
+                  {effectiveDisplaySchools.slice(0, 25).map((school, idx) => renderCompactSchoolRow(school, idx))}
                 </div>
               ) : (viewMode as string) === 'grid3' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-5 touch-pan-y overscroll-contain mt-2 sm:mt-2.5 w-full">
-                  {displayedSchools.slice(0, 25).map((school, idx) => renderSchoolCard(school, idx))}
+                  {effectiveDisplaySchools.slice(0, 25).map((school, idx) => renderSchoolCard(school, idx))}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-3.5 sm:gap-5 touch-pan-y overscroll-contain mt-2 sm:mt-2.5 w-full">
-                  {displayedSchools.slice(0, 25).map((school, idx) => renderSchoolCard(school, idx))}
+                  {effectiveDisplaySchools.slice(0, 25).map((school, idx) => renderSchoolCard(school, idx))}
                 </div>
               )}
 
-              {displayedSchools.length === 0 && (
+              {effectiveDisplaySchools.length === 0 && (
                 <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center my-4">
                   <Building2 size={40} className="mx-auto text-gray-300 mb-4" />
                   <h3 className="text-lg font-bold text-gray-800">No schools match your search</h3>

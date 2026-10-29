@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": "clm_mvthwt2l_opfd",
+    "schoolId": "07040320905",
+    "schoolName": "Ahlcon International School",
+    "claimantName": "Dev",
+    "claimantEmail": "bestteachersfaculty@gmail.com",
+    "phone": "9050778830",
+    "pincode": "121102",
+    "state": "Haryana",
+    "district": "Faridabad",
+    "note": "jhgj",
+    "status": "pending",
+    "createdAt": "2026-10-29T12:04:25.773Z"
+  }
+]

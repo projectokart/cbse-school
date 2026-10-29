@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -61,6 +61,65 @@ export default function SchoolsHierarchyClient({ initialData }: Props) {
   const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0);
+
+  // Natural Touch Drag Gesture for Hierarchy Filter Drawer
+  const [filterDragOffset, setFilterDragOffset] = useState<number>(0);
+  const [isFilterDragging, setIsFilterDragging] = useState(false);
+  const filterTouchStartX = useRef<number>(0);
+  const filterTouchStartY = useRef<number>(0);
+  const filterTouchStartTime = useRef<number>(0);
+  const isFilterHorizontal = useRef<boolean | null>(null);
+
+  useEffect(() => {
+    if (!filterPanelOpen) {
+      setFilterDragOffset(0);
+      setIsFilterDragging(false);
+    }
+  }, [filterPanelOpen]);
+
+  const handleFilterTouchStart = (e: React.TouchEvent) => {
+    filterTouchStartX.current = e.touches[0].clientX;
+    filterTouchStartY.current = e.touches[0].clientY;
+    filterTouchStartTime.current = Date.now();
+    isFilterHorizontal.current = null;
+    setIsFilterDragging(true);
+  };
+
+  const handleFilterTouchMove = (e: React.TouchEvent) => {
+    const deltaX = e.touches[0].clientX - filterTouchStartX.current;
+    const deltaY = e.touches[0].clientY - filterTouchStartY.current;
+
+    if (isFilterHorizontal.current === null) {
+      if (Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8) {
+        isFilterHorizontal.current = Math.abs(deltaX) > Math.abs(deltaY);
+      }
+    }
+
+    if (isFilterHorizontal.current) {
+      if (deltaX < 0) {
+        setFilterDragOffset(deltaX);
+      } else {
+        setFilterDragOffset(deltaX * 0.15);
+      }
+    }
+  };
+
+  const handleFilterTouchEnd = () => {
+    setIsFilterDragging(false);
+    const duration = Math.max(Date.now() - filterTouchStartTime.current, 1);
+    const velocity = Math.abs(filterDragOffset) / duration;
+
+    if (filterDragOffset < -65 || (filterDragOffset < -25 && velocity > 0.35)) {
+      setFilterDragOffset(-400);
+      setTimeout(() => {
+        setFilterPanelOpen(false);
+        setFilterDragOffset(0);
+      }, 200);
+    } else {
+      setFilterDragOffset(0);
+    }
+    isFilterHorizontal.current = null;
+  };
 
   // Dynamic Filters State (Exact Map Page Schema)
   const [sortBy, setSortBy] = useState<string>(query.sortBy || 'students_desc');
@@ -961,14 +1020,30 @@ export default function SchoolsHierarchyClient({ initialData }: Props) {
               className={`fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300 ${
                 filterPanelOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
               }`}
+              style={{
+                opacity: filterDragOffset < 0 ? Math.max(0.1, 1 - Math.abs(filterDragOffset) / 360) : undefined,
+                transition: isFilterDragging ? 'none' : undefined,
+              }}
               onClick={() => setFilterPanelOpen(false)}
             >
               <div
+                onTouchStart={handleFilterTouchStart}
+                onTouchMove={handleFilterTouchMove}
+                onTouchEnd={handleFilterTouchEnd}
                 onClick={(e) => e.stopPropagation()}
-                className={`fixed top-0 bottom-0 left-0 w-[360px] sm:w-[440px] max-w-[92vw] bg-white/95 backdrop-blur-xl shadow-2xl border-r border-slate-200 rounded-r-3xl flex flex-col transition-transform duration-300 ease-out text-xs z-50 ${
+                style={{
+                  transform: filterDragOffset !== 0 ? `translateX(${filterDragOffset}px)` : undefined,
+                  transition: isFilterDragging ? 'none' : undefined,
+                }}
+                className={`fixed top-0 bottom-0 left-0 w-[88vw] max-w-[360px] md:w-[380px] bg-white/95 backdrop-blur-xl shadow-2xl border-r border-slate-200 rounded-r-3xl flex flex-col transition-transform duration-300 ease-out text-xs z-50 ${
                   filterPanelOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
               >
+                {/* Visual Grab Handle Affordance on Right Edge */}
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 right-1 w-1 h-12 rounded-full bg-gray-300/80 pointer-events-none"
+                  title="Swipe left to close"
+                />
                 {/* Filter Drawer Header */}
                 <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80 rounded-tr-3xl">
                   <div className="flex items-center gap-2">

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   SlidersHorizontal, X, RotateCcw, Check, ArrowRight, ChevronDown, ChevronLeft,
   Search, Sparkles, Navigation, ArrowUpDown, Award, GraduationCap, Building2,
@@ -162,6 +162,65 @@ export const SchoolFilterSheet: React.FC<SchoolFilterSheetProps> = ({
 }) => {
   const [facilitySearch, setFacilitySearch] = useState('');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Natural Touch Drag Gesture for Mobile Drawer
+  const [filterDragOffset, setFilterDragOffset] = useState<number>(0);
+  const [isFilterDragging, setIsFilterDragging] = useState(false);
+  const filterTouchStartX = useRef<number>(0);
+  const filterTouchStartY = useRef<number>(0);
+  const filterTouchStartTime = useRef<number>(0);
+  const isFilterHorizontal = useRef<boolean | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setFilterDragOffset(0);
+      setIsFilterDragging(false);
+    }
+  }, [isOpen]);
+
+  const handleFilterTouchStart = (e: React.TouchEvent) => {
+    filterTouchStartX.current = e.touches[0].clientX;
+    filterTouchStartY.current = e.touches[0].clientY;
+    filterTouchStartTime.current = Date.now();
+    isFilterHorizontal.current = null;
+    setIsFilterDragging(true);
+  };
+
+  const handleFilterTouchMove = (e: React.TouchEvent) => {
+    const deltaX = e.touches[0].clientX - filterTouchStartX.current;
+    const deltaY = e.touches[0].clientY - filterTouchStartY.current;
+
+    if (isFilterHorizontal.current === null) {
+      if (Math.abs(deltaX) > 8 || Math.abs(deltaY) > 8) {
+        isFilterHorizontal.current = Math.abs(deltaX) > Math.abs(deltaY);
+      }
+    }
+
+    if (isFilterHorizontal.current) {
+      if (deltaX < 0) {
+        setFilterDragOffset(deltaX);
+      } else {
+        setFilterDragOffset(deltaX * 0.15);
+      }
+    }
+  };
+
+  const handleFilterTouchEnd = () => {
+    setIsFilterDragging(false);
+    const duration = Math.max(Date.now() - filterTouchStartTime.current, 1);
+    const velocity = Math.abs(filterDragOffset) / duration;
+
+    if (filterDragOffset < -65 || (filterDragOffset < -25 && velocity > 0.35)) {
+      setFilterDragOffset(-400);
+      setTimeout(() => {
+        onClose?.();
+        setFilterDragOffset(0);
+      }, 200);
+    } else {
+      setFilterDragOffset(0);
+    }
+    isFilterHorizontal.current = null;
+  };
 
   // Active filters count
   const activeCount = useMemo(() => {
@@ -962,12 +1021,30 @@ export const SchoolFilterSheet: React.FC<SchoolFilterSheetProps> = ({
       <div className="fixed inset-0 z-[99990] md:hidden">
         {/* Backdrop */}
         <div
-          className="fixed inset-0 bg-gray-900/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+          className="fixed inset-0 bg-gray-900/60 backdrop-blur-xs transition-opacity duration-200"
+          style={{
+            opacity: filterDragOffset < 0 ? Math.max(0.1, 1 - Math.abs(filterDragOffset) / 360) : 1,
+            transition: isFilterDragging ? 'none' : 'opacity 0.25s ease',
+          }}
           onClick={onClose}
         />
 
-        {/* Mobile Left Drawer Sheet */}
-        <div className="fixed inset-y-0 left-0 w-[88vw] max-w-[360px] h-full bg-white shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-left duration-300 z-10">
+        {/* Mobile Left Drawer Sheet with Natural Gesture */}
+        <div
+          onTouchStart={handleFilterTouchStart}
+          onTouchMove={handleFilterTouchMove}
+          onTouchEnd={handleFilterTouchEnd}
+          style={{
+            transform: filterDragOffset !== 0 ? `translateX(${filterDragOffset}px)` : undefined,
+            transition: isFilterDragging ? 'none' : 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)',
+          }}
+          className="fixed inset-y-0 left-0 w-[88vw] max-w-[360px] md:w-[380px] h-full bg-white shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-left duration-300 z-10"
+        >
+          {/* Visual Grab Handle Affordance on Right Edge */}
+          <div
+            className="absolute top-1/2 -translate-y-1/2 right-1 w-1 h-12 rounded-full bg-gray-300/80 pointer-events-none"
+            title="Swipe left to close"
+          />
           {/* Sticky Header */}
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between shrink-0 bg-white">
             <div className="flex items-center gap-2">

@@ -23,6 +23,7 @@ import 'leaflet/dist/leaflet.css';
 import { renderFacilityIcon, renderCategoryHeaderIcon, renderBoardLogo, renderClassIcon, renderSchoolTypeIcon, renderSpecialCategoryIcon } from './FacilityIcons';
 import ClaimSchoolModal from './ClaimSchoolModal';
 import SchoolFilterSheet from './SchoolFilterSheet';
+import SchoolDetailDrawer from './SchoolDetailDrawer';
 import { PLACEHOLDER_EMPTY_IMAGE } from '@/components/schools/template/SchoolTemplateContext';
 
 const getSafeSchoolImage = (img?: string) => {
@@ -332,6 +333,39 @@ export default function SchoolsDirectoryClient({ initialData }: Props) {
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [mobileSheetState, setMobileSheetState] = useState<'peek' | 'half' | 'full'>('half');
   const [mapListSearch, setMapListSearch] = useState<string>('');
+  const [detailDrawerSchool, setDetailDrawerSchool] = useState<SchoolRecord | null>(null);
+
+  // Natural Touch Drag Gesture for Map Mobile Bottom Sheet
+  const bottomSheetTouchStartY = useRef<number>(0);
+  const bottomSheetTouchStartTime = useRef<number>(0);
+
+  const handleBottomSheetTouchStart = (e: React.TouchEvent) => {
+    bottomSheetTouchStartY.current = e.touches[0].clientY;
+    bottomSheetTouchStartTime.current = Date.now();
+  };
+
+  const handleBottomSheetTouchEnd = (e: React.TouchEvent) => {
+    const deltaY = e.changedTouches[0].clientY - bottomSheetTouchStartY.current;
+    const duration = Math.max(Date.now() - bottomSheetTouchStartTime.current, 1);
+    const velocity = Math.abs(deltaY) / duration;
+
+    // Dragged UP: expand sheet
+    if (deltaY < -35 || (deltaY < -15 && velocity > 0.3)) {
+      if (mobileSheetState === 'peek') {
+        setMobileSheetState('half');
+      } else if (mobileSheetState === 'half') {
+        setMobileSheetState('full');
+      }
+    }
+    // Dragged DOWN: collapse sheet
+    else if (deltaY > 35 || (deltaY > 15 && velocity > 0.3)) {
+      if (mobileSheetState === 'full') {
+        setMobileSheetState('half');
+      } else if (mobileSheetState === 'half') {
+        setMobileSheetState('peek');
+      }
+    }
+  };
 
   const [navBottomOffset, setNavBottomOffset] = useState<number>(99);
 
@@ -1628,13 +1662,18 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
               <span className="truncate">Claim</span>
             </button>
             
-            <Link
-              href={profileUrl}
-              className="h-9 px-3.5 rounded-[14px] bg-[#006FCC] hover:bg-[#005399] text-white text-xs font-bold font-['Montserrat',sans-serif] inline-flex items-center justify-center gap-1 shadow-xs hover:shadow transition-all duration-200 active:scale-[0.98] whitespace-nowrap min-w-0 flex-1"
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDetailDrawerSchool(school);
+              }}
+              className="h-9 px-3.5 rounded-[14px] bg-[#006FCC] hover:bg-[#005399] text-white text-xs font-bold font-['Montserrat',sans-serif] inline-flex items-center justify-center gap-1 shadow-xs hover:shadow transition-all duration-200 active:scale-[0.98] whitespace-nowrap min-w-0 flex-1 cursor-pointer"
             >
               <span className="truncate">View</span>
               <ArrowRight size={13} className="shrink-0" />
-            </Link>
+            </button>
           </div>
         </div>
       </div>
@@ -1830,12 +1869,17 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
           </button>
           
           {/* View CTA */}
-          <Link
-            href={profileUrl}
-            className="h-8 px-3.5 rounded-[12px] bg-[#006FCC] hover:bg-[#005399] text-white text-xs font-bold font-['Montserrat',sans-serif] transition-all duration-200 active:scale-[0.98] shrink-0 inline-flex items-center justify-center shadow-xs whitespace-nowrap"
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDetailDrawerSchool(school);
+            }}
+            className="h-8 px-3.5 rounded-[12px] bg-[#006FCC] hover:bg-[#005399] text-white text-xs font-bold font-['Montserrat',sans-serif] transition-all duration-200 active:scale-[0.98] shrink-0 inline-flex items-center justify-center shadow-xs whitespace-nowrap cursor-pointer"
           >
             <span>View</span>
-          </Link>
+          </button>
         </div>
       </div>
     );
@@ -1920,14 +1964,17 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
               <span>Fly to Pin</span>
             </button>
 
-            <Link
-              href={profileUrl}
-              onClick={(e) => e.stopPropagation()}
-              className="h-6 px-3 rounded-[10px] bg-[#006FCC] text-white hover:bg-[#005399] text-[10.5px] font-bold flex items-center gap-1 transition-all duration-200 active:scale-[0.98]"
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDetailDrawerSchool(school);
+              }}
+              className="h-6 px-3 rounded-[10px] bg-[#006FCC] text-white hover:bg-[#005399] text-[10.5px] font-bold flex items-center gap-1 transition-all duration-200 active:scale-[0.98] cursor-pointer"
             >
               <span>Profile</span>
               <ArrowRight size={10} />
-            </Link>
+            </button>
           </div>
         </div>
       </div>
@@ -2061,13 +2108,18 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
               </svg>
               <span className="truncate">Map</span>
             </button>
-            <Link
-              href={profileUrl}
-              className="h-8 px-3 rounded-[12px] bg-[#006FCC] hover:bg-[#005399] text-white text-xs font-bold font-['Montserrat',sans-serif] inline-flex items-center justify-center gap-1 shadow-xs hover:shadow transition-all duration-200 active:scale-[0.98] whitespace-nowrap min-w-0"
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDetailDrawerSchool(school);
+              }}
+              className="h-8 px-3 rounded-[12px] bg-[#006FCC] hover:bg-[#005399] text-white text-xs font-bold font-['Montserrat',sans-serif] inline-flex items-center justify-center gap-1 shadow-xs hover:shadow transition-all duration-200 active:scale-[0.98] whitespace-nowrap min-w-0 cursor-pointer"
             >
               <span className="truncate">View</span>
               <ArrowRight size={12} className="shrink-0" />
-            </Link>
+            </button>
           </div>
         </div>
       </div>
@@ -3668,7 +3720,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                       showAllRedDots={mapDisplayMode === 'all_dots'}
                       selectedSchool={mapSelectedSchool}
                       onSelectSchool={(school) => handleSelectSchoolFromList(school as SchoolRecord, true)}
-                      onOpenDetails={(school) => router.push(getSchoolUrl(school as SchoolRecord))}
+                      onOpenDetails={(school) => setDetailDrawerSchool(school as SchoolRecord)}
                       onLocationChange={handleLocationChange}
                       onLocateMe={handleLocateMe}
                       isLocating={isLocating}
@@ -3686,8 +3738,10 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                         : 'h-[86vh]'
                     }`}
                   >
-                    {/* Visual drag pill handle */}
+                    {/* Visual drag pill handle with touch drag gesture */}
                     <div 
+                      onTouchStart={handleBottomSheetTouchStart}
+                      onTouchEnd={handleBottomSheetTouchEnd}
                       className="w-12 h-1 bg-gray-300/80 rounded-full mx-auto my-1 shrink-0 cursor-pointer active:bg-gray-400 transition" 
                       onClick={() => {
                         setMobileSheetState(
@@ -3698,7 +3752,11 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                     />
 
                     {/* Header Strip with Segmented Tabs */}
-                    <div className="w-full px-3 py-1 flex items-center justify-between gap-2 border-b border-gray-100 shrink-0 bg-white/90">
+                    <div 
+                      onTouchStart={handleBottomSheetTouchStart}
+                      onTouchEnd={handleBottomSheetTouchEnd}
+                      className="w-full px-3 py-1 flex items-center justify-between gap-2 border-b border-gray-100 shrink-0 bg-white/90"
+                    >
                       {/* Segmented View Switcher: Map, Split, Cards */}
                       <div className="flex items-center bg-gray-100 p-0.5 rounded-lg text-xs font-bold shrink-0 shadow-2xs">
                         <button
@@ -4217,6 +4275,15 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
         schoolName={claimModalData.schoolName}
         udiseCode={claimModalData.udiseCode}
         currentUser={user}
+      />
+
+      {/* ── Left Side School Detail Drawer (Matches Filter Sheet Width & Natural Gestures) ── */}
+      <SchoolDetailDrawer
+        school={detailDrawerSchool}
+        isOpen={Boolean(detailDrawerSchool)}
+        onClose={() => setDetailDrawerSchool(null)}
+        onCompareToggle={(s) => handleToggleCompare(s, { stopPropagation: () => {} } as any)}
+        isCompared={detailDrawerSchool ? compareList.some((c) => c.id === detailDrawerSchool.id) : false}
       />
     </div>
   );

@@ -64,6 +64,7 @@ export default function ClaimSchoolModal({
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [isOtpVerified, setIsOtpVerified] = useState(false);
   const [otpError, setOtpError] = useState<string | null>(null);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
   // Submission States
@@ -171,15 +172,31 @@ export default function ClaimSchoolModal({
   if (!isOpen) return null;
 
   // ─── SEND OTP / LOGIN NOW ───
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     setOtpError(null);
     if (!email.trim() || !email.includes('@')) {
       setOtpError('Please enter a valid email address first.');
       return;
     }
-    setShowOtpField(true);
-    setOtpTimer(119);
-    setIsTimerActive(true);
+    setIsSendingOtp(true);
+    try {
+      const res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to send OTP to email.');
+      }
+      setShowOtpField(true);
+      setOtpTimer(119);
+      setIsTimerActive(true);
+    } catch (err: any) {
+      setOtpError(err.message || 'Failed to send OTP. Please check your internet connection.');
+    } finally {
+      setIsSendingOtp(false);
+    }
   };
 
   // ─── VERIFY OTP & CREATE / SIGN-IN USER ───
@@ -193,13 +210,22 @@ export default function ClaimSchoolModal({
 
     setIsVerifyingOtp(true);
     try {
-      // Any valid 4 or 6 digit code verifies in this demo / production auth flow
+      const res = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), otp: cleanOtp }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Invalid OTP code.');
+      }
+
       await signInWithEmailOtp(email, name, phone);
       setIsOtpVerified(true);
       setShowOtpField(false);
       setIsTimerActive(false);
     } catch (err: any) {
-      setOtpError('Invalid OTP code. Please try again.');
+      setOtpError(err.message || 'Invalid OTP code. Please try again.');
     } finally {
       setIsVerifyingOtp(false);
     }
@@ -517,9 +543,10 @@ export default function ClaimSchoolModal({
                     <button
                       type="button"
                       onClick={handleSendOtp}
-                      className="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#006FCC] border border-blue-200 text-xs font-bold transition active:scale-95 cursor-pointer whitespace-nowrap shrink-0"
+                      disabled={isSendingOtp}
+                      className="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#006FCC] border border-blue-200 text-xs font-bold transition active:scale-95 cursor-pointer whitespace-nowrap shrink-0 disabled:opacity-60"
                     >
-                      Login Now
+                      {isSendingOtp ? 'Sending OTP...' : 'Login Now'}
                     </button>
                   )}
                 </div>
@@ -531,7 +558,7 @@ export default function ClaimSchoolModal({
                     <div className="text-[11px] font-bold text-emerald-700 flex items-center justify-between">
                       <span className="flex items-center gap-1">
                         <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                        <span>OTP is sent to your mail</span>
+                        <span>OTP is sent to your mail ({email})</span>
                       </span>
                       <span className="text-emerald-800 font-mono">
                         Valid for {formatTimer(otpTimer)}
@@ -542,7 +569,7 @@ export default function ClaimSchoolModal({
                       <input
                         type="text"
                         maxLength={6}
-                        placeholder="Enter 4 or 6-digit OTP"
+                        placeholder="Enter 6-digit OTP"
                         value={otpInput}
                         onChange={(e) => setOtpInput(e.target.value)}
                         className="flex-1 px-3 py-1.5 rounded-lg border border-emerald-300 focus:outline-none focus:border-emerald-600 text-xs bg-white font-mono"
@@ -551,14 +578,14 @@ export default function ClaimSchoolModal({
                         type="button"
                         onClick={handleVerifyOtp}
                         disabled={isVerifyingOtp}
-                        className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition active:scale-95 cursor-pointer shrink-0"
+                        className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition active:scale-95 cursor-pointer shrink-0 disabled:opacity-60"
                       >
                         {isVerifyingOtp ? 'Verifying...' : 'Verify OTP'}
                       </button>
                     </div>
 
                     <p className="text-[10px] text-emerald-800/80">
-                      Demo OTP: You can enter <strong>1234</strong> or any 4-digit code to immediately verify.
+                      Check your Gmail inbox or Spam folder for the 6-digit code.
                     </p>
                     {otpError && <p className="text-[11px] text-red-600 font-medium">{otpError}</p>}
                   </div>

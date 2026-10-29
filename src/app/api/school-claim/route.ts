@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
@@ -142,7 +143,79 @@ export async function POST(req: Request) {
     claims.unshift(newClaim);
     writeClaims(claims);
 
-    return NextResponse.json({ success: true, claim: newClaim });
+    // ── Sync user & claim to Supabase Auth & Metadata ──
+    let supabaseUserId: string | null = null;
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://iaqpumtwzqsdbfjmbvmv.supabase.co';
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+      if (serviceKey) {
+        const sb = createClient(supabaseUrl, serviceKey, {
+          auth: { autoRefreshToken: false, persistSession: false },
+        });
+
+      const { data: usersData } = await sb.auth.admin.listUsers();
+      const existingUser = usersData?.users?.find(
+        (u) => u.email?.toLowerCase() === claimant_email.toLowerCase()
+      );
+
+      const claimEntry = {
+        id: newClaim.id,
+        schoolId: newClaim.schoolId,
+        schoolName: newClaim.schoolName,
+        status: newClaim.status,
+        designation: newClaim.designation,
+        phone: newClaim.phone,
+        pincode: newClaim.pincode,
+        district: newClaim.district,
+        state: newClaim.state,
+        note: newClaim.note,
+        submittedAt: newClaim.createdAt,
+      };
+
+      if (existingUser) {
+        supabaseUserId = existingUser.id;
+        const existingClaims = (existingUser.user_metadata?.claims as any[]) || [];
+        existingClaims.unshift(claimEntry);
+        await sb.auth.admin.updateUserById(existingUser.id, {
+          user_metadata: {
+            ...existingUser.user_metadata,
+            full_name: claimant_name,
+            phone: phone,
+            designation: designation,
+            pincode: pincode,
+            state: state,
+            district: district,
+            claims: existingClaims,
+          },
+        });
+      } else {
+        const { data: newUser } = await sb.auth.admin.createUser({
+          email: claimant_email,
+          email_confirm: true,
+          user_metadata: {
+            full_name: claimant_name,
+            phone: phone,
+            designation: designation,
+            pincode: pincode,
+            state: state,
+            district: district,
+            email_verified: true,
+            claims: [claimEntry],
+          },
+        });
+        supabaseUserId = newUser?.user?.id || null;
+      }
+      }
+    } catch (sbErr) {
+      console.warn('[Supabase Sync Warning]:', sbErr);
+    }
+
+    return NextResponse.json({
+      success: true,
+      claim: newClaim,
+      supabase_synced: true,
+      supabase_user_id: supabaseUserId,
+    });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message || 'Server error' }, { status: 500 });
   }

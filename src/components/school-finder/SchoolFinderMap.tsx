@@ -389,7 +389,7 @@ export default function SchoolFinderMap({
     };
   }, [mapReady, ensureUserMarker]);
 
-  // Smooth flyTo when mapFocus changes (pointer, Fly to Pin, school selection)
+  // Smooth pan when mapFocus changes (pointer, Fly to Pin, school selection) - NO aggressive zoom
   useEffect(() => {
     if (!mapInstanceRef.current || !mapReady || !mapFocus) return;
     const map = mapInstanceRef.current;
@@ -398,12 +398,13 @@ export default function SchoolFinderMap({
 
     try {
       const offsetLatLng = getOffsetLatLng(mapFocus.lat, mapFocus.lng, targetZoom);
-      map.flyTo(offsetLatLng, targetZoom, {
-        duration: 0.5,
-        easeLinearity: 0.25,
-      });
+      if (targetZoom === curZoom) {
+        map.panTo(offsetLatLng, { duration: 0.35 });
+      } else {
+        map.flyTo(offsetLatLng, targetZoom, { duration: 0.45, easeLinearity: 0.25 });
+      }
     } catch {
-      map.flyTo([mapFocus.lat, mapFocus.lng], targetZoom, { duration: 0.5 });
+      map.panTo([mapFocus.lat, mapFocus.lng], { duration: 0.35 });
     }
   }, [mapFocus, mapReady, getOffsetLatLng]);
 
@@ -762,6 +763,7 @@ export default function SchoolFinderMap({
       className: 'custom-school-compact-popup',
       autoClose: true,
       closeOnClick: false,
+      autoPan: false,
     });
 
     marker.on('popupopen', () => {

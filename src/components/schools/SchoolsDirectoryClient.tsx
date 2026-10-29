@@ -936,11 +936,10 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
     setMapSelectedSchool(school);
     const lat = school.lat || school.latitude;
     const lng = school.lng || school.longitude;
-    if (lat && lng) {
-      setMapFocus({ lat, lng, zoom: 15, timestamp: Date.now() });
-    }
-    if (fromMapMarker && mobileSheetState === 'peek') {
-      setMobileSheetState('half');
+    // Map zoom must NOT change on school selection.
+    // If selected from list, gently pan at current zoom. If clicked on map, don't move map at all.
+    if (!fromMapMarker && lat && lng) {
+      setMapFocus({ lat, lng, timestamp: Date.now() });
     }
   };
 

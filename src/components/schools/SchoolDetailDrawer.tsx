@@ -45,6 +45,7 @@ interface SchoolDetailDrawerProps {
   isLiked?: boolean;
   likesCount?: number;
   onLikeToggle?: (school: SchoolRecord) => void;
+  onClaimClick?: (school: SchoolRecord) => void;
 }
 
 export default function SchoolDetailDrawer({
@@ -56,6 +57,7 @@ export default function SchoolDetailDrawer({
   isLiked = false,
   likesCount = 0,
   onLikeToggle,
+  onClaimClick,
 }: SchoolDetailDrawerProps) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedUdise, setCopiedUdise] = useState(false);
@@ -391,6 +393,19 @@ export default function SchoolDetailDrawer({
                     <Phone size={14} />
                   </a>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onClaimClick?.(school);
+                  }}
+                  className="py-1.5 px-2.5 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 flex items-center gap-1 transition active:scale-98 cursor-pointer"
+                  title="Claim School Profile"
+                >
+                  <ShieldCheck size={12} className="text-amber-600" />
+                  <span>Claim</span>
+                </button>
 
                 <button
                   type="button"

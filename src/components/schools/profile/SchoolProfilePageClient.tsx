@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
   Share2,
@@ -35,12 +35,15 @@ import {
   ThumbsUp,
   Globe,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Edit3,
+  Save
 } from 'lucide-react';
 import { SchoolRecord } from '@/data/schoolFinderData';
 import { renderBoardLogo } from '../FacilityIcons';
 import { getCleanSchoolName, formatCardLocation } from '../SchoolsDirectoryClient';
 import { useAuth } from '@/contexts/AuthContext';
+import ClaimSchoolModal from '../ClaimSchoolModal';
 
 interface SchoolProfilePageClientProps {
   school: SchoolRecord;
@@ -48,10 +51,50 @@ interface SchoolProfilePageClientProps {
 
 export default function SchoolProfilePageClient({ school }: SchoolProfilePageClientProps) {
   const router = useRouter();
-  const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const isEditParam = searchParams?.get('edit') === 'true';
+  const { user, activeClaim } = useAuth();
 
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedUdise, setCopiedUdise] = useState(false);
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+
+  const rawUdise = String(school.udise_code || school.udiseCode || school.id || '');
+  const cleanUdise = rawUdise.split(',')[0].trim();
+
+  const isVerifiedOwner = activeClaim?.status === 'verified' && (activeClaim.schoolId === cleanUdise || activeClaim.schoolId === school.id);
+  const [isEditMode, setIsEditMode] = useState(isEditParam || isVerifiedOwner);
+
+  // Custom Editable Fields (Saved in localStorage)
+  const [editedPhone, setEditedPhone] = useState(school.phone || '');
+  const [editedEmail, setEditedEmail] = useState(school.email || '');
+  const [editedWebsite, setEditedWebsite] = useState(school.website || '');
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState(false);
+
+  useEffect(() => {
+    try {
+      const storedEdits = localStorage.getItem('cseel_school_edits_' + cleanUdise);
+      if (storedEdits) {
+        const parsed = JSON.parse(storedEdits);
+        if (parsed.phone) setEditedPhone(parsed.phone);
+        if (parsed.email) setEditedEmail(parsed.email);
+        if (parsed.website) setEditedWebsite(parsed.website);
+      }
+    } catch {}
+  }, [cleanUdise]);
+
+  const handleSaveEdits = () => {
+    try {
+      localStorage.setItem('cseel_school_edits_' + cleanUdise, JSON.stringify({
+        phone: editedPhone,
+        email: editedEmail,
+        website: editedWebsite,
+        updatedAt: new Date().toISOString(),
+      }));
+      setSaveSuccessMsg(true);
+      setTimeout(() => setSaveSuccessMsg(false), 3000);
+    } catch {}
+  };
 
   // Like State
   const [isLiked, setIsLiked] = useState<boolean>(() => {
@@ -117,8 +160,6 @@ export default function SchoolProfilePageClient({ school }: SchoolProfilePageCli
   // School identity
   const cleanName = getCleanSchoolName(school.school_name || school.name);
   const locationText = formatCardLocation(school);
-  const rawUdise = String(school.udise_code || school.udiseCode || school.id || '');
-  const cleanUdise = rawUdise.split(',')[0].trim();
   const boardName =
     school.board_secondary_10th ||
     school.board_higher_secondary_12th ||
@@ -415,6 +456,16 @@ export default function SchoolProfilePageClient({ school }: SchoolProfilePageCli
 
               <button
                 type="button"
+                onClick={() => setIsClaimModalOpen(true)}
+                className="py-2 px-3 rounded-xl text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 flex items-center gap-1.5 transition active:scale-98 cursor-pointer"
+                title="Claim School Profile to Edit Details"
+              >
+                <ShieldCheck size={13} className="text-amber-600" />
+                <span>Claim School</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={handleCopyUdise}
                 className="py-2 px-3 rounded-xl text-xs font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-1.5 transition active:scale-98 cursor-pointer"
                 title="Copy UDISE Code"
@@ -446,6 +497,79 @@ export default function SchoolProfilePageClient({ school }: SchoolProfilePageCli
             </div>
           </div>
         </section>
+
+        {/* ── EDIT MODE BANNER (When user is verified owner or edit=true) ── */}
+        {isEditMode && (
+          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 space-y-3 shadow-xs animate-in slide-in-from-top-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold">
+                  <Edit3 size={16} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold leading-tight">
+                    ✏️ School Profile Edit Mode Active
+                  </h3>
+                  <p className="text-[11px] text-emerald-800">
+                    You have verified editing permissions for {cleanName} (UDISE: {cleanUdise})
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSaveEdits}
+                className="py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+              >
+                <Save size={14} />
+                <span>Save Profile Changes</span>
+              </button>
+            </div>
+
+            {saveSuccessMsg && (
+              <div className="p-2 rounded-lg bg-white border border-emerald-300 text-emerald-800 text-xs font-bold flex items-center gap-1.5">
+                <Check size={14} className="text-emerald-600" />
+                <span>🎉 School Profile Changes Saved Successfully!</span>
+              </div>
+            )}
+
+            {/* Quick Edit Inputs */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-xs">
+              <div>
+                <label className="text-[11px] font-semibold text-emerald-900 block mb-0.5">Contact Phone</label>
+                <input
+                  type="text"
+                  value={editedPhone}
+                  onChange={(e) => setEditedPhone(e.target.value)}
+                  placeholder="Official Phone"
+                  className="w-full px-3 py-1.5 rounded-lg bg-white border border-emerald-200 text-xs focus:outline-none focus:border-emerald-600"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold text-emerald-900 block mb-0.5">Contact Email</label>
+                <input
+                  type="email"
+                  value={editedEmail}
+                  onChange={(e) => setEditedEmail(e.target.value)}
+                  placeholder="Official Email"
+                  className="w-full px-3 py-1.5 rounded-lg bg-white border border-emerald-200 text-xs focus:outline-none focus:border-emerald-600"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold text-emerald-900 block mb-0.5">School Website</label>
+                <input
+                  type="text"
+                  value={editedWebsite}
+                  onChange={(e) => setEditedWebsite(e.target.value)}
+                  placeholder="Website URL"
+                  className="w-full px-3 py-1.5 rounded-lg bg-white border border-emerald-200 text-xs focus:outline-none focus:border-emerald-600"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── CARD 2: SECTION: ABOUT SCHOOL (Requested by user) ── */}
         <section className="bg-white rounded-2xl border border-gray-200/90 shadow-2xs p-4 sm:p-5 space-y-3.5">
@@ -1053,6 +1177,15 @@ export default function SchoolProfilePageClient({ school }: SchoolProfilePageCli
           </div>
         </div>
       </footer>
+
+      {/* ── CLAIM SCHOOL MODAL ── */}
+      <ClaimSchoolModal
+        isOpen={isClaimModalOpen}
+        onClose={() => setIsClaimModalOpen(false)}
+        schoolName={cleanName}
+        udiseCode={cleanUdise}
+        currentUser={user}
+      />
     </div>
   );
 }

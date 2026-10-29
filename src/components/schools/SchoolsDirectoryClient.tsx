@@ -4300,6 +4300,13 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
             s.udise_code || s.school_id
           )
         }
+        onClaimClick={(s) =>
+          setClaimModalData({
+            isOpen: true,
+            schoolName: getCleanSchoolName(s.school_name || s.name),
+            udiseCode: String(s.udise_code || s.school_id || s.id).split(',')[0].trim(),
+          })
+        }
       />
     </div>
   );

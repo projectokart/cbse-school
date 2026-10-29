@@ -575,6 +575,9 @@ export default function SchoolsDirectoryClient({ initialData }: Props) {
     if (nextState) {
       setSearchMode('near_me');
       setSortBy('distance_asc');
+      // Immediate fetch with current center for instant response
+      fetchNearMeSchools(1, mapRadiusKm, searchCenter.lat, searchCenter.lng);
+
       if (typeof window !== 'undefined' && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
@@ -584,12 +587,10 @@ export default function SchoolsDirectoryClient({ initialData }: Props) {
             fetchNearMeSchools(1, mapRadiusKm, latitude, longitude);
           },
           () => {
-            fetchNearMeSchools(1, mapRadiusKm, searchCenter.lat, searchCenter.lng);
+            // Already fetched with searchCenter
           },
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          { enableHighAccuracy: false, timeout: 4000, maximumAge: 60000 }
         );
-      } else {
-        fetchNearMeSchools(1, mapRadiusKm, searchCenter.lat, searchCenter.lng);
       }
     } else {
       setSearchMode('text');
@@ -2448,11 +2449,13 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
 
       {/* ── Hero Section (Carousel & Search) with Minimise Feature ── */}
-      {/* ── Hero Section (Carousel & Search) with Minimise Feature ── */}
       {!isHeroMinimized && (
-        <div className={`relative z-40 min-h-[360px] sm:min-h-[400px] w-full bg-slate-950 flex flex-col items-center justify-center transition-all duration-300 ${
-          (viewMode as string) === 'map' ? 'hidden md:flex' : ''
-        }`}>
+        <div
+          suppressHydrationWarning
+          className={`relative z-40 min-h-[360px] sm:min-h-[400px] w-full bg-slate-950 flex flex-col items-center justify-center transition-all duration-300 ${
+            (viewMode as string) === 'map' ? 'hidden md:flex' : ''
+          }`}
+        >
           {/* Carousel Background Images with Clean 45% Dark Overlay (Clipped neatly with inner overflow-hidden) */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {HERO_IMAGES.map((img, idx) => (

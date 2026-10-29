@@ -9,15 +9,14 @@ export function renderBoardLogo(boardName: string) {
   // 1. CBSE (Official Central Board of Secondary Education Emblem)
   if (name.includes('cbse')) {
     return (
-      <img
-        src="/images/boards/cbse.png"
-        alt="CBSE Logo"
-        className="w-5 h-5 object-contain shrink-0 rounded-full"
-        onError={(e) => {
-          // Fallback SVG if image is unavailable
-          e.currentTarget.style.display = 'none';
-        }}
-      />
+      <svg className="w-5 h-5 shrink-0" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="15" fill="#1E3A8A" stroke="#F59E0B" strokeWidth="1.2" />
+        <circle cx="16" cy="16" r="12" stroke="#FEF3C7" strokeWidth="0.8" strokeDasharray="1.5 1" />
+        <path d="M10 19.5C10 19.5 13 18 16 19C19 18 22 19.5 22 19.5V13C22 13 19 11.5 16 12.5C13 11.5 10 13 10 13V19.5Z" fill="#FFFFFF" stroke="#F59E0B" strokeWidth="0.8" />
+        <circle cx="16" cy="9.5" r="1.5" fill="#F59E0B" />
+        <path d="M16 6.5L16.8 8.5H15.2Z" fill="#EF4444" />
+        <text x="16" y="25" textAnchor="middle" fontSize="3.5" fontWeight="900" fill="#FEF3C7" fontFamily="Arial, sans-serif">CBSE</text>
+      </svg>
     );
   }
 

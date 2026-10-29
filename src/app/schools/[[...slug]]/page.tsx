@@ -1,8 +1,16 @@
 import type { Metadata } from 'next';
 import { parseSchoolsSeoQuery } from '@/lib/schoolsSeoParser';
 import { fetchSchoolsForDirectory, getSchoolBySlugOrUdise } from '@/integrations/supabase/schoolsDirectoryDb';
-import SchoolsDirectoryClient from '@/components/schools/SchoolsDirectoryClient';
-import SchoolProfilePageClient from '@/components/schools/profile/SchoolProfilePageClient';
+import dynamic from 'next/dynamic';
+
+const SchoolsDirectoryClient = dynamic(
+  () => import('@/components/schools/SchoolsDirectoryClient'),
+  { ssr: false }
+);
+const SchoolProfilePageClient = dynamic(
+  () => import('@/components/schools/profile/SchoolProfilePageClient'),
+  { ssr: false }
+);
 
 export const revalidate = 60;
 
@@ -19,7 +27,8 @@ export async function generateMetadata({
 
   // Check if this is an individual school profile
   if (segments.length >= 1) {
-    const school = getSchoolBySlugOrUdise(segments[0]);
+    const lastSegment = segments[segments.length - 1];
+    const school = getSchoolBySlugOrUdise(lastSegment) || (segments.length > 1 ? getSchoolBySlugOrUdise(segments[0]) : null);
     if (school) {
       const name = school.school_name || school.name || 'School';
       const city = school.district_name || school.city || '';
@@ -91,7 +100,8 @@ export default async function SchoolsDirectoryPage({
 
   // 1. If slug points to an individual school profile, render dedicated SchoolProfilePageClient
   if (segments.length >= 1) {
-    const matchedSchool = getSchoolBySlugOrUdise(segments[0]);
+    const lastSegment = segments[segments.length - 1];
+    const matchedSchool = getSchoolBySlugOrUdise(lastSegment) || (segments.length > 1 ? getSchoolBySlugOrUdise(segments[0]) : null);
     if (matchedSchool) {
       return <SchoolProfilePageClient school={matchedSchool} />;
     }

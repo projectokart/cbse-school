@@ -1,5 +1,20 @@
 [
   {
+    "id": "clm_mvtren51_rns3",
+    "schoolId": "07060209106",
+    "schoolName": "D A V SR SEC SCHOOL",
+    "claimantName": "Pt. Devender Kaushik",
+    "claimantEmail": "ptdevkaushik101@gmail.com",
+    "phone": "9876543210",
+    "designation": "Principal & Administrator",
+    "pincode": "110001",
+    "state": "Delhi",
+    "district": "Central Delhi",
+    "note": "Official profile claim for session 2026-27.",
+    "status": "pending",
+    "createdAt": "2026-10-29T16:30:14.437Z"
+  },
+  {
     "id": "clm_mvtp101e_bqwd",
     "schoolId": "07060309105",
     "schoolName": "BHAI JOGA SINGH PUBLIC SCHOOL",

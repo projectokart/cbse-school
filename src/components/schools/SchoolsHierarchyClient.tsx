@@ -1339,7 +1339,7 @@ function renderSchoolCard(
   query: any,
   setNavigatingTo: (href: string) => void
 ) {
-  const profileUrl = `/school/${(school.state_name || query.stateSlug || 'india').toLowerCase().replace(/\s+/g, '-')}/${(school.district_name || query.districtSlug || 'district').toLowerCase().replace(/\s+/g, '-')}/${(school.village_ward || 'area').toLowerCase().replace(/\s+/g, '-')}/${school.udise_code || school.school_id || school.id}`;
+  const profileUrl = `/schools/${(school.state_name || query.stateSlug || 'india').toLowerCase().replace(/\s+/g, '-')}/${(school.district_name || query.districtSlug || 'district').toLowerCase().replace(/\s+/g, '-')}/${(school.village_ward || 'area').toLowerCase().replace(/\s+/g, '-')}/${school.udise_code || school.school_id || school.id}`;
   const hasAtl = school.tinkering_lab_atl === 'Yes' || school.tinkering_lab_atl === true;
   const hasComp = school.ict_lab === 'Yes' || school.ict_lab === true || Number(school.desktop_computers_working) > 0;
 

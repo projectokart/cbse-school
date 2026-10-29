@@ -1386,7 +1386,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
     const stateSlug = (derivedState || 'delhi').toLowerCase().replace(/\s+/g, '-');
     const districtSlug = (derivedDistrict || 'delhi').toLowerCase().replace(/\s+/g, '-');
     const villageSlug = (s.village_ward || s.locality || 'main').toLowerCase().replace(/\s+/g, '-');
-    return `/school/${stateSlug}/${districtSlug}/${villageSlug}/${s.udise_code || s.id}`;
+    return `/schools/${stateSlug}/${districtSlug}/${villageSlug}/${s.udise_code || s.id}`;
   };
 
   const openGoogleMaps = (school: SchoolRecord, e: React.MouseEvent) => {

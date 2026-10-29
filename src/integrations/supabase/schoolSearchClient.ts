@@ -4,9 +4,8 @@ import { SchoolRecord } from '@/data/schoolFinderData';
 const NEW_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://iaqpumtwzqsdbfjmbvmv.supabase.co';
 const NEW_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export const supabase = createClient(NEW_SUPABASE_URL, NEW_SUPABASE_ANON_KEY);
 export const schoolSearchSupabase = createClient(NEW_SUPABASE_URL, NEW_SUPABASE_ANON_KEY, {
-  auth: { persistSession: false },
+  auth: { persistSession: false, autoRefreshToken: false },
   global: {
     fetch: async (url, options: any = {}) => {
       const method = (options.method || 'GET').toUpperCase();
@@ -51,6 +50,7 @@ export const schoolSearchSupabase = createClient(NEW_SUPABASE_URL, NEW_SUPABASE_
     },
   },
 });
+export const supabase = schoolSearchSupabase;
 
 export function calculateHaversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Earth's radius in km

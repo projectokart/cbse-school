@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import { AuthProvider } from '@/contexts/AuthContext';
+import SchoolHeader from '@/components/layout/SchoolHeader';
+import SchoolFooter from '@/components/layout/SchoolFooter';
 import './globals.css';
 
 export const viewport: Viewport = {
-  themeColor: '#1A73E8',
+  themeColor: '#005689',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
@@ -53,9 +55,13 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen font-sans bg-slate-50 text-slate-800 antialiased selection:bg-blue-100 selection:text-blue-900">
+      <body className="min-h-screen flex flex-col font-sans bg-slate-50 text-slate-800 antialiased selection:bg-blue-100 selection:text-blue-900">
         <AuthProvider>
-          {children}
+          <SchoolHeader />
+          <main className="flex-1 w-full">
+            {children}
+          </main>
+          <SchoolFooter />
         </AuthProvider>
       </body>
     </html>

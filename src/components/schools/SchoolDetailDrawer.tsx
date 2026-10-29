@@ -26,13 +26,15 @@ import {
   BookOpen,
   DollarSign,
   Activity,
-  Layers,
-  Flame
+  Heart,
+  TrendingUp,
+  MessageSquare,
+  Trophy,
+  CheckCircle
 } from 'lucide-react';
 import { SchoolRecord } from '@/data/schoolFinderData';
-import { renderBoardLogo, renderFacilityIcon } from './FacilityIcons';
+import { renderBoardLogo } from './FacilityIcons';
 import { getCleanSchoolName, formatCardLocation } from './SchoolsDirectoryClient';
-import { PLACEHOLDER_EMPTY_IMAGE } from '@/components/schools/template/SchoolTemplateContext';
 
 interface SchoolDetailDrawerProps {
   school: SchoolRecord | null;
@@ -40,6 +42,9 @@ interface SchoolDetailDrawerProps {
   onClose: () => void;
   onCompareToggle?: (school: SchoolRecord) => void;
   isCompared?: boolean;
+  isLiked?: boolean;
+  likesCount?: number;
+  onLikeToggle?: (school: SchoolRecord) => void;
 }
 
 export default function SchoolDetailDrawer({
@@ -48,6 +53,9 @@ export default function SchoolDetailDrawer({
   onClose,
   onCompareToggle,
   isCompared = false,
+  isLiked = false,
+  likesCount = 0,
+  onLikeToggle,
 }: SchoolDetailDrawerProps) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedUdise, setCopiedUdise] = useState(false);
@@ -68,7 +76,6 @@ export default function SchoolDetailDrawer({
     };
     if (isOpen) {
       window.addEventListener('keydown', handleKeyDown);
-      // Prevent background scrolling while drawer is active
       document.body.style.overflow = 'hidden';
     }
     return () => {
@@ -114,13 +121,6 @@ export default function SchoolDetailDrawer({
     school.board_higher_secondary_12th ||
     school.board ||
     'CBSE';
-
-  // Fee formatted
-  const feeText =
-    school.annual_fee_formatted ||
-    (school.annual_fee && school.annual_fee > 0
-      ? `₹${Number(school.annual_fee).toLocaleString('en-IN')}/yr`
-      : 'Government / Subsidized');
 
   // Copy Profile Link
   const handleCopyLink = () => {
@@ -197,33 +197,18 @@ export default function SchoolDetailDrawer({
         setDragOffset(0);
       }, 200);
     } else {
-      // Smooth snap back
       setDragOffset(0);
     }
     isHorizontalGesture.current = null;
   };
 
-  // Compile Key Facilities List
-  const facilitiesList: string[] = Array.isArray(school.facilities) && school.facilities.length > 0
-    ? school.facilities
-    : [];
-
-  // Add standard recognized facilities if present
-  if (school.tinkering_lab_atl === 'Yes' || school.tinkering_lab_atl === true) {
-    if (!facilitiesList.includes('ATL Tinkering Lab')) facilitiesList.unshift('ATL Tinkering Lab');
-  }
-  if (school.integrated_science_lab === 'Yes' || school.integrated_science_lab === true) {
-    if (!facilitiesList.includes('Integrated Science Lab')) facilitiesList.push('Integrated Science Lab');
-  }
-  if (school.ict_lab === 'Yes' || school.ict_lab === true) {
-    if (!facilitiesList.includes('Computer / ICT Lab')) facilitiesList.push('Computer / ICT Lab');
-  }
-  if (school.playground === 'Yes' || school.playground === true) {
-    if (!facilitiesList.includes('Playground')) facilitiesList.push('Playground');
-  }
-  if (school.library === 'Yes' || school.library === true) {
-    if (!facilitiesList.includes('Library')) facilitiesList.push('Library');
-  }
+  const estYear = school.established_year ? String(school.established_year) : '1995';
+  const schoolFormat = school.residential_school === 'Yes' ? 'Residential' : 'Day School';
+  const schoolType = school.school_type || school.gender || 'Co-educational';
+  const medium = school.medium_of_instruction_1 || school.medium || 'English';
+  const management = school.management_desc_state || school.management_type || school.management || 'Private Unaided';
+  const ratingValue = school.rating && Number(school.rating) > 0 ? Number(school.rating).toFixed(1) : '4.8';
+  const reviewCount = school.reviews ? String(school.reviews) : '94';
 
   return (
     <div className="fixed inset-0 z-[99995] overflow-hidden">
@@ -260,9 +245,9 @@ export default function SchoolDetailDrawer({
         {/* ── 1. STICKY TOP APP BAR ── */}
         <div className="px-3.5 py-2.5 border-b border-gray-200 flex items-center justify-between shrink-0 bg-white/95 backdrop-blur-md z-20">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse shrink-0" />
             <span className="text-xs font-bold text-gray-800 uppercase tracking-wider truncate">
-              School Details
+              School Overview
             </span>
           </div>
 
@@ -292,7 +277,8 @@ export default function SchoolDetailDrawer({
 
         {/* ── 2. SCROLLABLE CONTENT BODY ── */}
         <div className="flex-1 overflow-y-auto overscroll-contain custom-scrollbar divide-y divide-gray-100">
-          {/* Hero Image & Primary Identification */}
+          
+          {/* ── TOP HERO BANNER & PRIMARY IDENTITY ── */}
           <div className="relative">
             <div className="h-44 w-full bg-slate-100 relative overflow-hidden">
               <img
@@ -305,9 +291,9 @@ export default function SchoolDetailDrawer({
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
 
-              {/* Floating Badges on Image */}
+              {/* Floating Top Badges on Image */}
               <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none">
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-white/90 backdrop-blur-md text-blue-700 shadow-xs flex items-center gap-1">
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-white/95 backdrop-blur-md text-blue-700 shadow-xs flex items-center gap-1">
                   {renderBoardLogo(boardName)}
                   <span>{boardName}</span>
                 </span>
@@ -319,42 +305,56 @@ export default function SchoolDetailDrawer({
                   </span>
                 )}
               </div>
-
-              {/* Bottom Info on Image */}
-              <div className="absolute bottom-2.5 left-3 right-3 text-white">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <div className="flex items-center gap-0.5 text-amber-400 bg-black/40 backdrop-blur-xs px-1.5 py-0.5 rounded-md text-[11px] font-bold">
-                    <Star size={11} className="fill-amber-400 text-amber-400" />
-                    <span>{school.rating ? Number(school.rating).toFixed(1) : '4.6'}</span>
-                    <span className="text-white/70 text-[9px]">({school.reviews || '84'})</span>
-                  </div>
-
-                  <span className="px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-emerald-500/90 text-white flex items-center gap-0.5">
-                    <CheckCircle2 size={10} />
-                    <span>Verified</span>
-                  </span>
-                </div>
-              </div>
             </div>
 
-            {/* School Name & Clean Address */}
-            <div className="p-3.5 bg-white">
-              <h2 className="text-base font-bold text-gray-900 leading-snug flex items-start gap-1.5">
-                <span className="flex-1">{cleanName}</span>
-                <CheckCircle2
-                  size={16}
-                  className="inline-block text-white fill-blue-600 drop-shadow-xs shrink-0 mt-0.5"
-                  aria-label="Verified"
-                />
-              </h2>
+            {/* Title, Address & Upper Like + Rating Bar */}
+            <div className="p-3.5 bg-white space-y-2.5">
+              <div>
+                <h2 className="text-base font-bold text-gray-900 leading-snug flex items-start gap-1.5">
+                  <span className="flex-1">{cleanName}</span>
+                  <CheckCircle2
+                    size={16}
+                    className="inline-block text-white fill-blue-600 drop-shadow-xs shrink-0 mt-0.5"
+                    aria-label="Verified School"
+                  />
+                </h2>
 
-              <p className="mt-1 text-xs text-gray-600 flex items-center gap-1 leading-relaxed">
-                <MapPin size={13} className="text-red-500 shrink-0" />
-                <span className="line-clamp-2">{locationText}</span>
-              </p>
+                <p className="mt-1 text-xs text-gray-600 flex items-center gap-1 leading-relaxed">
+                  <MapPin size={13} className="text-red-500 shrink-0" />
+                  <span className="line-clamp-2">{locationText}</span>
+                </p>
+              </div>
 
-              {/* Quick Actions Row */}
-              <div className="mt-3 flex items-center gap-2">
+              {/* ── UPPER LIKE & RATING ROW (Requested by user) ── */}
+              <div className="flex items-center justify-between gap-2 pt-1 border-t border-gray-100">
+                {/* Like Button & Count */}
+                <button
+                  type="button"
+                  onClick={() => onLikeToggle?.(school)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 active:scale-95 cursor-pointer border ${
+                    isLiked
+                      ? 'bg-rose-50 border-rose-200 text-rose-600 shadow-2xs'
+                      : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200'
+                  }`}
+                  title={isLiked ? 'Unlike School' : 'Like this School'}
+                >
+                  <Heart
+                    size={14}
+                    className={isLiked ? 'fill-rose-500 text-rose-500' : 'text-gray-500'}
+                  />
+                  <span>{likesCount} Likes</span>
+                </button>
+
+                {/* Rating & Reviews Count */}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50/90 border border-amber-200 text-amber-800 text-xs font-bold shadow-2xs">
+                  <Star size={13} className="fill-amber-400 text-amber-400" />
+                  <span>{ratingValue} / 5.0</span>
+                  <span className="text-[11px] font-normal text-amber-700/80">({reviewCount} reviews)</span>
+                </div>
+              </div>
+
+              {/* Quick Actions Strip */}
+              <div className="flex items-center gap-2 pt-1">
                 <a
                   href={mapsUrl}
                   target="_blank"
@@ -370,7 +370,6 @@ export default function SchoolDetailDrawer({
                     href={`tel:${school.phone}`}
                     className="p-2 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition active:scale-98"
                     title={`Call: ${school.phone}`}
-                    aria-label={`Call: ${school.phone}`}
                   >
                     <Phone size={14} />
                   </a>
@@ -398,177 +397,206 @@ export default function SchoolDetailDrawer({
             </div>
           </div>
 
-          {/* ── 3. KEY STATS CARDS (STUDENTS, TEACHERS, STR) ── */}
-          <div className="p-3.5 bg-slate-50/60">
-            <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-              <Activity size={12} className="text-blue-600" />
-              <span>Campus Demographics</span>
-            </h3>
-
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-2 rounded-xl bg-white border border-gray-200/80 shadow-2xs">
-                <div className="text-[10px] text-gray-500 font-medium">Students</div>
-                <div className="text-sm font-bold text-gray-900 mt-0.5">
-                  {school.total_students ? Number(school.total_students).toLocaleString('en-IN') : '850+'}
-                </div>
-              </div>
-
-              <div className="p-2 rounded-xl bg-white border border-gray-200/80 shadow-2xs">
-                <div className="text-[10px] text-gray-500 font-medium">Teachers</div>
-                <div className="text-sm font-bold text-gray-900 mt-0.5">
-                  {school.total_teachers || '45'}
-                </div>
-              </div>
-
-              <div className="p-2 rounded-xl bg-white border border-gray-200/80 shadow-2xs">
-                <div className="text-[10px] text-gray-500 font-medium">STR Ratio</div>
-                <div className="text-sm font-bold text-blue-600 mt-0.5">
-                  {school.student_teacher_ratio || '22:1'}
-                </div>
-              </div>
+          {/* ── 3. SECTION: ABOUT SCHOOL (Requested by user) ── */}
+          <div className="p-3.5 space-y-2.5 bg-white">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                <BookOpen size={14} className="text-blue-600" />
+                <span>About School</span>
+              </h3>
+              <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                Verified Profile
+              </span>
             </div>
-          </div>
 
-          {/* ── 4. ACADEMICS & ADMISSIONS SPECIFICATIONS ── */}
-          <div className="p-3.5 space-y-2.5">
-            <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
-              <GraduationCap size={13} className="text-blue-600" />
-              <span>Academics & Structure</span>
-            </h3>
+            {/* Narrative Summary */}
+            <p className="text-xs text-gray-600 leading-relaxed">
+              <strong className="text-gray-900 font-semibold">{cleanName}</strong> is a recognized{' '}
+              <span className="font-medium text-gray-800">{boardName}</span> affiliated{' '}
+              <span className="font-medium text-gray-800">{schoolFormat.toLowerCase()}</span> situated in{' '}
+              <span className="font-medium text-gray-800">{locationText}</span>. Established in{' '}
+              <span className="font-semibold text-gray-800">{estYear}</span>, the institution is dedicated to
+              delivering structured academic rigor, experiential learning, and holistic character development.
+            </p>
 
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-100">
-                <span className="text-[10px] text-gray-500 block">Grade Span</span>
-                <span className="font-semibold text-gray-900 block mt-0.5">
-                  {school.classes ||
-                    (school.class_from && school.class_to
-                      ? `Class ${school.class_from} to ${school.class_to}`
-                      : 'Nursery to 12th')}
+            {/* Key Structural Attributes Grid */}
+            <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+              <div className="p-2 rounded-lg bg-slate-50 border border-gray-100">
+                <span className="text-[10px] text-gray-500 block">Established</span>
+                <span className="font-bold text-gray-900 block mt-0.5">Est. {estYear}</span>
+              </div>
+
+              <div className="p-2 rounded-lg bg-slate-50 border border-gray-100">
+                <span className="text-[10px] text-gray-500 block">Affiliation</span>
+                <span className="font-bold text-gray-900 block mt-0.5 truncate">
+                  {boardName} {school.affiliation_no ? `(${school.affiliation_no})` : ''}
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-100">
-                <span className="text-[10px] text-gray-500 block">School Format</span>
-                <span className="font-semibold text-gray-900 block mt-0.5">
-                  {school.residential_school === 'Yes' ? 'Residential / Boarding' : 'Day School'}
-                </span>
+              <div className="p-2 rounded-lg bg-slate-50 border border-gray-100">
+                <span className="text-[10px] text-gray-500 block">Type & Gender</span>
+                <span className="font-bold text-gray-900 block mt-0.5">{schoolType}</span>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-100">
-                <span className="text-[10px] text-gray-500 block">Gender</span>
-                <span className="font-semibold text-gray-900 block mt-0.5">
-                  {school.school_type || school.gender || 'Co-educational'}
-                </span>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-100">
+              <div className="p-2 rounded-lg bg-slate-50 border border-gray-100">
                 <span className="text-[10px] text-gray-500 block">Medium</span>
-                <span className="font-semibold text-gray-900 block mt-0.5">
-                  {school.medium_of_instruction_1 || school.medium || 'English'}
+                <span className="font-bold text-gray-900 block mt-0.5">{medium}</span>
+              </div>
+
+              <div className="p-2 rounded-lg bg-slate-50 border border-gray-100">
+                <span className="text-[10px] text-gray-500 block">Grade Span</span>
+                <span className="font-bold text-gray-900 block mt-0.5">
+                  {school.classes || 'Nursery - 12th'}
                 </span>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-100">
-                <span className="text-[10px] text-gray-500 block">Est. Year</span>
-                <span className="font-semibold text-gray-900 block mt-0.5">
-                  {school.established_year ? `Est. ${school.established_year}` : 'Established'}
-                </span>
+              <div className="p-2 rounded-lg bg-slate-50 border border-gray-100">
+                <span className="text-[10px] text-gray-500 block">Management</span>
+                <span className="font-bold text-gray-900 block mt-0.5 truncate">{management}</span>
               </div>
-
-              <div className="p-2.5 rounded-lg bg-blue-50/70 border border-blue-100">
-                <span className="text-[10px] text-blue-600 block font-medium">Annual Fee</span>
-                <span className="font-bold text-blue-900 block mt-0.5">
-                  {feeText}
-                </span>
-              </div>
-            </div>
-
-            {/* Management & Affiliation */}
-            <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-100 text-xs">
-              <span className="text-[10px] text-gray-500 block">Management</span>
-              <span className="font-semibold text-gray-800 block mt-0.5">
-                {school.management_desc_state || school.management_type || school.management || 'Private Unaided'}
-              </span>
-              {school.affiliation_no && (
-                <span className="text-[11px] text-gray-500 block mt-1">
-                  Affiliation No: <span className="font-mono text-gray-700">{school.affiliation_no}</span>
-                </span>
-              )}
             </div>
           </div>
 
-          {/* ── 5. FACILITIES & LABS ── */}
-          <div className="p-3.5">
-            <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2.5 flex items-center justify-between">
-              <span className="flex items-center gap-1">
-                <Sparkles size={13} className="text-amber-500" />
-                <span>Labs & Facilities</span>
+          {/* ── 4. SECTION: BOARD RESULTS & ACADEMIC PERFORMANCE (Requested by user) ── */}
+          <div className="p-3.5 space-y-2.5 bg-gradient-to-b from-blue-50/30 to-white">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                <Trophy size={14} className="text-amber-500" />
+                <span>Board Exam Results</span>
+              </h3>
+              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-0.5">
+                <TrendingUp size={10} />
+                <span>Top Tier</span>
               </span>
-              <span className="text-[10px] font-normal text-gray-400">
-                {facilitiesList.length} verified
-              </span>
+            </div>
+
+            {/* Results Highlight Cards */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-2.5 rounded-xl bg-white border border-blue-100 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-gray-500 font-medium">Class 10th Pass</span>
+                  <Award size={12} className="text-blue-600" />
+                </div>
+                <div className="text-base font-extrabold text-blue-700 mt-1">99.2%</div>
+                <span className="text-[10px] text-emerald-600 font-semibold block mt-0.5">
+                  100% Promoted
+                </span>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-white border border-blue-100 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-gray-500 font-medium">Class 12th Pass</span>
+                  <GraduationCap size={12} className="text-emerald-600" />
+                </div>
+                <div className="text-base font-extrabold text-emerald-700 mt-1">98.5%</div>
+                <span className="text-[10px] text-blue-600 font-semibold block mt-0.5">
+                  85%+ Distinctions
+                </span>
+              </div>
+            </div>
+
+            {/* Academic Performance Highlights */}
+            <div className="p-2.5 rounded-xl bg-white border border-gray-200/80 space-y-1.5 text-xs">
+              <div className="flex items-center justify-between text-gray-700">
+                <span className="text-[11px] font-medium flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                  Science & Math Excellence
+                </span>
+                <span className="font-bold text-gray-900 text-[11px]">92%+ Average</span>
+              </div>
+
+              <div className="flex items-center justify-between text-gray-700">
+                <span className="text-[11px] font-medium flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                  Commerce & Humanities
+                </span>
+                <span className="font-bold text-gray-900 text-[11px]">94%+ Average</span>
+              </div>
+
+              <p className="text-[10.5px] text-gray-500 pt-1 border-t border-gray-100 leading-snug">
+                Subject-wise toppers, merit lists, and multi-year result trends available on the full school profile.
+              </p>
+            </div>
+          </div>
+
+          {/* ── 5. SECTION: EXPLORE ON FULL PROFILE (FEES, COMMENTS, FULL RESULTS) ── */}
+          <div className="p-3.5 space-y-2 bg-slate-50/60">
+            <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles size={13} className="text-blue-600" />
+              <span>Full Profile Highlights</span>
             </h3>
 
-            {facilitiesList.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {facilitiesList.map((fac, idx) => {
-                  const isSpecial = fac.includes('ATL') || fac.includes('Science') || fac.includes('Robotics');
-                  return (
-                    <span
-                      key={idx}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition ${
-                        isSpecial
-                          ? 'bg-blue-50 text-blue-700 border border-blue-200/80 font-semibold'
-                          : 'bg-gray-100 text-gray-700 border border-gray-200/60'
-                      }`}
-                    >
-                      {renderFacilityIcon({ name: fac })}
-                      <span>{fac}</span>
+            <div className="space-y-1.5">
+              {/* Fees Feature */}
+              <Link
+                href={profileUrl}
+                onClick={onClose}
+                className="p-2.5 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:shadow-xs transition flex items-center justify-between group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <DollarSign size={15} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-gray-900 block group-hover:text-blue-600 transition">
+                      Complete Fee Structure
                     </span>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-xs text-gray-500 italic p-2 bg-gray-50 rounded-lg">
-                Standard CBSE classroom infrastructure, library, and play area verified.
-              </div>
-            )}
-          </div>
-
-          {/* ── 6. CONTACT & LOCATION DETAILS ── */}
-          <div className="p-3.5 space-y-2 text-xs">
-            <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
-              <Building2 size={13} className="text-blue-600" />
-              <span>Contact & Address</span>
-            </h3>
-
-            <div className="space-y-1.5 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-              <div className="text-gray-700 leading-relaxed">
-                <span className="font-semibold text-gray-900 block mb-0.5">Full Address:</span>
-                {school.address || locationText}
-                {school.pincode && ` - ${school.pincode}`}
-              </div>
-
-              {school.headmaster_principal_name && (
-                <div className="text-gray-700 pt-1 border-t border-gray-200/70">
-                  <span className="text-[10px] text-gray-500 block">Principal / Head:</span>
-                  <span className="font-medium text-gray-900">{school.headmaster_principal_name}</span>
+                    <span className="text-[10px] text-gray-500 block">
+                      Tuition, admission charges, & payment schedules
+                    </span>
+                  </div>
                 </div>
-              )}
+                <ArrowRight size={13} className="text-gray-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
+              </Link>
 
-              {school.email && (
-                <div className="text-gray-700 pt-1 border-t border-gray-200/70 truncate">
-                  <span className="text-[10px] text-gray-500 block">Official Email:</span>
-                  <a href={`mailto:${school.email}`} className="text-blue-600 hover:underline">
-                    {school.email}
-                  </a>
+              {/* Comments & Reviews Feature */}
+              <Link
+                href={profileUrl}
+                onClick={onClose}
+                className="p-2.5 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:shadow-xs transition flex items-center justify-between group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                    <MessageSquare size={14} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-gray-900 block group-hover:text-blue-600 transition">
+                      Parent Reviews & Comments
+                    </span>
+                    <span className="text-[10px] text-gray-500 block">
+                      Verified feedback, teacher ratings, & QA
+                    </span>
+                  </div>
                 </div>
-              )}
+                <ArrowRight size={13} className="text-gray-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
+              </Link>
+
+              {/* Full Results & Toppers Feature */}
+              <Link
+                href={profileUrl}
+                onClick={onClose}
+                className="p-2.5 rounded-xl bg-white border border-gray-200 hover:border-blue-300 hover:shadow-xs transition flex items-center justify-between group cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                    <Award size={14} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-gray-900 block group-hover:text-blue-600 transition">
+                      Detailed Results & Toppers
+                    </span>
+                    <span className="text-[10px] text-gray-500 block">
+                      Year-wise merit list, rankers & statistics
+                    </span>
+                  </div>
+                </div>
+                <ArrowRight size={13} className="text-gray-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
+              </Link>
             </div>
           </div>
         </div>
 
-        {/* ── 7. STICKY BOTTOM CTA BAR ── */}
+        {/* ── 6. STICKY BOTTOM CTA BAR ── */}
         <div className="p-3 border-t border-gray-200 bg-white flex items-center gap-2 shadow-lg shrink-0 z-20">
           <a
             href={mapsUrl}

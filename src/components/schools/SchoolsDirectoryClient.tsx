@@ -4284,6 +4284,22 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
         onClose={() => setDetailDrawerSchool(null)}
         onCompareToggle={(s) => handleToggleCompare(s, { stopPropagation: () => {} } as any)}
         isCompared={detailDrawerSchool ? compareList.some((c) => c.id === detailDrawerSchool.id) : false}
+        isLiked={detailDrawerSchool ? likedSchoolIds.includes(detailDrawerSchool.id) : false}
+        likesCount={
+          detailDrawerSchool
+            ? (likesCounts[detailDrawerSchool.id] ??
+                ((detailDrawerSchool as any).likes_count ||
+                  (detailDrawerSchool as any).likesCount ||
+                  0))
+            : 0
+        }
+        onLikeToggle={(s) =>
+          handleToggleLike(
+            s.id,
+            { stopPropagation: () => {} } as any,
+            s.udise_code || s.school_id
+          )
+        }
       />
     </div>
   );

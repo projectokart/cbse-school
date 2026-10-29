@@ -605,3 +605,59 @@ export async function fetchSchoolsForDirectory(seoQuery: SchoolSeoQuery): Promis
   SCHOOLS_CACHE.set(cacheKey, { data: memoryResult, timestamp: Date.now() });
   return memoryResult;
 }
+
+export function getSchoolBySlugOrUdise(rawSlug: string): SchoolRecord | null {
+  if (!rawSlug) return null;
+  const decoded = decodeURIComponent(rawSlug).trim().toLowerCase();
+
+  // If it's a known directory category or state or district or empty, it's not a single school profile
+  if (
+    decoded === 'schools' ||
+    decoded.startsWith('schools-in-') ||
+    decoded.startsWith('cbse-schools-in-') ||
+    decoded.startsWith('best-schools-in-') ||
+    decoded.startsWith('top-') ||
+    decoded.startsWith('private-') ||
+    decoded.startsWith('government-') ||
+    decoded.startsWith('day-schools-in-') ||
+    decoded.startsWith('boarding-schools-in-') ||
+    decoded.startsWith('english-medium-') ||
+    KNOWN_STATES[decoded]
+  ) {
+    return null;
+  }
+
+  const allSchools = getAllSchoolsFromDatabase();
+
+  // 1. Check if slug starts with UDISE code (digits, e.g. "06190100101-delhi-public-school" -> "06190100101")
+  const udiseMatch = decoded.match(/^(\d{7,14})/);
+  if (udiseMatch) {
+    const targetUdise = udiseMatch[1];
+    const match = allSchools.find((s) => {
+      const u = String(s.udise_code || s.udiseCode || s.id || '').trim();
+      return u === targetUdise || u.startsWith(targetUdise);
+    });
+    if (match) return match;
+  }
+
+  // 2. Check if slug matches school id directly
+  const idMatch = allSchools.find((s) => {
+    const sId = String(s.id || s.school_id || '').toLowerCase().trim();
+    return sId && (sId === decoded || decoded.startsWith(sId));
+  });
+  if (idMatch) return idMatch;
+
+  // 3. Check if slug matches normalized school name
+  if (decoded.length > 5) {
+    const nameMatch = allSchools.find((s) => {
+      const sSlug = (s.school_name || s.name || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+      return sSlug && (decoded === sSlug || decoded.includes(sSlug));
+    });
+    if (nameMatch) return nameMatch;
+  }
+
+  return null;
+}

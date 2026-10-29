@@ -57,6 +57,27 @@ export const DEFAULT_FEE_TERMS: FeeTermItem[] = [
   }
 ];
 
+export const DEFAULT_FEES_TABLE = {
+  columns: ['Grade Level', 'Monthly Tuition Fee', 'Quarterly Fee', 'Annualized Fee'],
+  rows: [
+    ['Pre-Primary (Nursery - KG)', '₹3,500', '₹10,500', '₹42,000'],
+    ['Primary (Class 1 - 5)', '₹4,200', '₹12,600', '₹50,400'],
+    ['Middle (Class 6 - 8)', '₹4,800', '₹14,400', '₹57,600'],
+    ['Secondary (Class 9 - 10)', '₹5,500', '₹16,500', '₹66,000'],
+    ['Senior Secondary (Class 11 - 12)', '₹6,500', '₹19,500', '₹78,000'],
+  ]
+};
+
+export const DEFAULT_EXTRA_CHARGES = {
+  columns: ['Facility / Service Head', 'Frequency', 'Applicable Grades', 'Fee Amount'],
+  rows: [
+    ['Admission Registration & Prospectus', 'One-Time (New Admission)', 'All Grades', '₹1,500'],
+    ['Caution Deposit (Refundable)', 'One-Time Security', 'All Grades', '₹5,000'],
+    ['Annual Development & STEM Lab Fee', 'Annual', 'Grade 1 - 12', '₹6,000'],
+    ['School Transport / Bus Facility', 'Quarterly (Optional)', 'Zone 1 (0-5 km)', '₹4,500'],
+  ]
+};
+
 export interface SchoolFeeSectionProps {
   displayName: string;
   displayBoard: string;
@@ -78,12 +99,14 @@ export interface SchoolFeeSectionProps {
   setAdmissionPhone?: (val: string) => void;
   admissionEmail?: string;
   setAdmissionEmail?: (val: string) => void;
-  feesTable: { columns: string[]; rows: string[][] };
-  setFeesTable: React.Dispatch<React.SetStateAction<{ columns: string[]; rows: string[][] }>>;
-  extraChargesTable: { columns: string[]; rows: string[][] };
-  setExtraChargesTable: React.Dispatch<React.SetStateAction<{ columns: string[]; rows: string[][] }>>;
+  feesTable?: { columns: string[]; rows: string[][] };
+  setFeesTable?: React.Dispatch<React.SetStateAction<{ columns: string[]; rows: string[][] }>>;
+  extraChargesTable?: { columns: string[]; rows: string[][] };
+  setExtraChargesTable?: React.Dispatch<React.SetStateAction<{ columns: string[]; rows: string[][] }>>;
   feeTermsList?: FeeTermItem[];
   setFeeTermsList?: React.Dispatch<React.SetStateAction<FeeTermItem[]>>;
+  onApplyClick?: () => void;
+  onContactClick?: () => void;
 }
 
 export default function SchoolFeeSection({
@@ -113,7 +136,17 @@ export default function SchoolFeeSection({
   setExtraChargesTable,
   feeTermsList: propFeeTermsList,
   setFeeTermsList: propSetFeeTermsList,
+  onApplyClick,
+  onContactClick,
 }: SchoolFeeSectionProps) {
+  const [internalFeesTable, setInternalFeesTable] = useState(DEFAULT_FEES_TABLE);
+  const [internalExtraChargesTable, setInternalExtraChargesTable] = useState(DEFAULT_EXTRA_CHARGES);
+
+  const activeFeesTable = feesTable || internalFeesTable;
+  const activeSetFeesTable = setFeesTable || setInternalFeesTable;
+  const activeExtraChargesTable = extraChargesTable || internalExtraChargesTable;
+  const activeSetExtraChargesTable = setExtraChargesTable || setInternalExtraChargesTable;
+
   const [internalTermsList, setInternalTermsList] = useState<FeeTermItem[]>(() => {
     if (propFeeTermsList && propFeeTermsList.length > 0) return propFeeTermsList;
     if (templateData?.feeTermsList && Array.isArray(templateData.feeTermsList) && templateData.feeTermsList.length > 0) {
@@ -522,8 +555,8 @@ export default function SchoolFeeSection({
               </div>
             )}
 
-            {feesTable.rows.some(r => r.some((c, idx) => idx > 0 && c && c.trim() !== '')) || isEditMode ? (
-              renderDynamicTable('Admission & Tuition Fees', feesTable, setFeesTable)
+            {activeFeesTable.rows.some(r => r.some((c, idx) => idx > 0 && c && c.trim() !== '')) || isEditMode ? (
+              renderDynamicTable('Admission & Tuition Fees', activeFeesTable, activeSetFeesTable)
             ) : (
               <div className="bg-white border border-[#E8E9E9] rounded-[14px] p-8 sm:p-10 text-center max-w-4xl mx-auto mb-8 shadow-xs">
                 <div className="w-12 h-12 rounded-[12px] bg-[#EDF5FA] text-[#006FCC] border border-[#D0E4F5] flex items-center justify-center mx-auto mb-4 shadow-xs">
@@ -536,8 +569,8 @@ export default function SchoolFeeSection({
               </div>
             )}
 
-            {(extraChargesTable.rows.some(r => r.some((c, idx) => idx > 0 && c && c.trim() !== '')) || isEditMode) && (
-              renderDynamicTable('Extra / Other Charges', extraChargesTable, setExtraChargesTable)
+            {(activeExtraChargesTable.rows.some(r => r.some((c, idx) => idx > 0 && c && c.trim() !== '')) || isEditMode) && (
+              renderDynamicTable('Extra / Other Charges', activeExtraChargesTable, activeSetExtraChargesTable)
             )}
 
             {/* ─── TERMS, DUE DATES & INSTITUTIONAL GUIDELINES CARD ─── */}

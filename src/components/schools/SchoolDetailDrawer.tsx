@@ -311,7 +311,14 @@ export default function SchoolDetailDrawer({
             <div className="p-3.5 bg-white space-y-2.5">
               <div>
                 <h2 className="text-base font-bold text-gray-900 leading-snug flex items-start gap-1.5">
-                  <span className="flex-1">{cleanName}</span>
+                  <Link
+                    href={profileUrl}
+                    onClick={onClose}
+                    className="flex-1 hover:text-[#006FCC] transition-colors cursor-pointer"
+                    title="Click to open full profile page"
+                  >
+                    {cleanName}
+                  </Link>
                   <CheckCircle2
                     size={16}
                     className="inline-block text-white fill-blue-600 drop-shadow-xs shrink-0 mt-0.5"
@@ -355,11 +362,21 @@ export default function SchoolDetailDrawer({
 
               {/* Quick Actions Strip */}
               <div className="flex items-center gap-2 pt-1">
+                <Link
+                  href={profileUrl}
+                  onClick={onClose}
+                  className="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-[#006FCC] hover:bg-[#005399] text-white flex items-center justify-center gap-1.5 shadow-xs transition active:scale-98 cursor-pointer"
+                  title="Open Complete School Profile Page"
+                >
+                  <span>Open School</span>
+                  <ExternalLink size={12} />
+                </Link>
+
                 <a
                   href={mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center justify-center gap-1.5 transition active:scale-98"
+                  className="py-1.5 px-3 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center justify-center gap-1.5 transition active:scale-98"
                 >
                   <Navigation size={12} />
                   <span>Directions</span>

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { parseSchoolsSeoQuery } from '@/lib/schoolsSeoParser';
-import { fetchSchoolsForDirectory } from '@/integrations/supabase/schoolsDirectoryDb';
+import { fetchSchoolsForDirectory, getSchoolBySlugOrUdise } from '@/integrations/supabase/schoolsDirectoryDb';
 import SchoolsDirectoryClient from '@/components/schools/SchoolsDirectoryClient';
+import SchoolProfilePageClient from '@/components/schools/profile/SchoolProfilePageClient';
 
 export const revalidate = 60;
 
@@ -15,6 +16,32 @@ export async function generateMetadata({
   const resolvedParams = params ? await Promise.resolve(params) : {};
   const resolvedSearchParams = searchParams ? await Promise.resolve(searchParams) : {};
   const segments = resolvedParams?.slug || [];
+
+  // Check if this is an individual school profile
+  if (segments.length >= 1) {
+    const school = getSchoolBySlugOrUdise(segments[0]);
+    if (school) {
+      const name = school.school_name || school.name || 'School';
+      const city = school.district_name || school.city || '';
+      const state = school.state_name || school.state || '';
+      const board = school.board || 'CBSE';
+      return {
+        title: `${name}, ${city} - Fees, Admissions, Board Results & Reviews | CSEEL`,
+        description: `Complete verified profile of ${name}, ${city}, ${state}. Check ${board} affiliation, annual fee structure, 10th & 12th board results, ATL lab facilities, and parent reviews.`,
+        alternates: {
+          canonical: `https://www.cseel.org/schools/${segments.join('/')}`,
+        },
+        openGraph: {
+          title: `${name} (${board}) - Fees, Results & Reviews`,
+          description: `Explore ${name} in ${city}, ${state}. Verified fees, board results, facilities, and admissions open.`,
+          url: `https://www.cseel.org/schools/${segments.join('/')}`,
+          siteName: 'CSEEL',
+          images: [{ url: school.image || 'https://www.cseel.org/images/cseel-schools-preview.jpg' }],
+        },
+      };
+    }
+  }
+
   const parsed = parseSchoolsSeoQuery(segments, resolvedSearchParams);
 
   return {
@@ -61,6 +88,16 @@ export default async function SchoolsDirectoryPage({
   const resolvedParams = params ? await Promise.resolve(params) : {};
   const resolvedSearchParams = searchParams ? await Promise.resolve(searchParams) : {};
   const segments = resolvedParams?.slug || [];
+
+  // 1. If slug points to an individual school profile, render dedicated SchoolProfilePageClient
+  if (segments.length >= 1) {
+    const matchedSchool = getSchoolBySlugOrUdise(segments[0]);
+    if (matchedSchool) {
+      return <SchoolProfilePageClient school={matchedSchool} />;
+    }
+  }
+
+  // 2. Otherwise render the Directory & Map Search Page
   const parsedQuery = parseSchoolsSeoQuery(segments, resolvedSearchParams);
   const directoryData = await fetchSchoolsForDirectory(parsedQuery);
 

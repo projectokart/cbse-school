@@ -598,9 +598,7 @@ export default function SchoolsDirectoryClient({ initialData }: Props) {
     return counts;
   }, [initialData.schools]);
   
-  // Modal States for Add School & Claim School
-  const [isAddSchoolModalOpen, setIsAddSchoolModalOpen] = useState(false);
-  const [isAddSchoolExpanded, setIsAddSchoolExpanded] = useState(false);
+  // Modal State for Claim School
   const [claimModalData, setClaimModalData] = useState<{
     isOpen: boolean;
     schoolName: string;
@@ -610,11 +608,6 @@ export default function SchoolsDirectoryClient({ initialData }: Props) {
     schoolName: '',
     udiseCode: '',
   });
-  
-  // Add School / Profile Button Handler
-  const handleAddSchoolClick = () => {
-    setIsAddSchoolModalOpen(true);
-  };
 
   // Hero Carousel & Minimized state
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
@@ -726,7 +719,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
           .toLowerCase();
         return haystack.includes(q) || haystack.includes(rawQ);
       });
-    } else if (searchMode === 'near_me' || viewMode === 'map') {
+    } else if (searchMode === 'near_me' || (viewMode as string) === 'map') {
       // 3. Near Me or Map View: Filter by Radius & sort by closest distance
       const inRadius = list.filter((s) => s.distance !== undefined && s.distance <= mapRadiusKm);
       if (inRadius.length > 0) {
@@ -2260,7 +2253,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
           }
         }
         @media (max-width: 767px) {
-          ${viewMode === 'map' ? `
+          ${(viewMode as string) === 'map' ? `
             html, body {
               overflow: hidden !important;
               height: 100% !important;
@@ -2332,7 +2325,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
       {/* ── Hero Section (Carousel & Search) with Minimise Feature ── */}
       {!isHeroMinimized && (
         <div className={`relative z-40 min-h-[360px] sm:min-h-[400px] w-full bg-slate-950 flex flex-col items-center justify-center transition-all duration-300 ${
-          viewMode === 'map' ? 'hidden md:flex' : ''
+          (viewMode as string) === 'map' ? 'hidden md:flex' : ''
         }`}>
           {/* Carousel Background Images with Clean 45% Dark Overlay (Clipped neatly with inner overflow-hidden) */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -2403,7 +2396,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
       {/* ── Admin Access & Directory Governance Control Bar ── */}
       {isAdmin && (
         <div className={`max-w-screen-2xl mx-auto w-full px-4 md:px-6 lg:px-8 pt-4 ${
-          viewMode === 'map' ? 'hidden md:block' : ''
+          (viewMode as string) === 'map' ? 'hidden md:block' : ''
         }`}>
           <div className="bg-slate-900 text-white p-3.5 sm:p-4 rounded-2xl shadow-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
@@ -2492,7 +2485,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
       {/* ── Main Layout: Admin Dashboard Style (Sidebar + Content) ── */}
       <div className={`w-full flex flex-col md:flex-row gap-3 sm:gap-4 px-3 sm:px-4 md:pl-0 md:pr-4 lg:pr-5 pt-2 sm:pt-3 md:pt-0 pb-4 sm:pb-6 flex-1 ${
-        viewMode === 'map' ? 'p-0 md:pl-0 md:pr-4 lg:pr-5 md:pb-6' : ''
+        (viewMode as string) === 'map' ? 'p-0 md:pl-0 md:pr-4 lg:pr-5 md:pb-6' : ''
       }`}>
         {/* ── 1. Modern Mobile Filter Sheet (Drawer / Bottom Sheet on < 768px) ── */}
         <SchoolFilterSheet
@@ -2652,13 +2645,185 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
         }`}>
           
           {/* Active Status & View Switcher Bar (Hidden when Map is in Fullscreen Expand Mode) */}
-          {!(isMapFullscreen && viewMode === 'map') && (
+          {!(isMapFullscreen && (viewMode as string) === 'map') && (
             <div className={`relative z-30 transition-all ${
-              viewMode === 'map'
-                ? 'fixed top-2.5 inset-x-2.5 z-40 bg-white/95 backdrop-blur-md rounded-2xl shadow-lg border border-gray-200/90 p-1.5 md:relative md:top-auto md:inset-x-auto md:z-30 md:bg-white md:rounded-t-none md:rounded-b-xl md:border-gray-200 md:shadow-xs md:p-2.5 flex flex-col gap-1.5'
+              (viewMode as string) === 'map'
+                ? 'md:relative md:top-auto md:inset-x-auto md:z-30 md:bg-white md:rounded-t-none md:rounded-b-xl md:border md:border-gray-200 md:shadow-xs md:p-2.5 md:flex md:flex-col md:gap-1.5'
                 : 'bg-white p-2 sm:p-2.5 rounded-t-none rounded-b-xl border border-gray-200 shadow-xs flex flex-col gap-1.5 relative z-30'
             }`}>
-              {/* ─── MOBILE VIEW (< 768px): Maximum Space Search Input with City Icon, Filter & Menu Icons ─── */}
+              {/* Floating 3-Dot Menu ONLY on top of Screen Map (No search bar covering map) */}
+              {(viewMode as string) === 'map' ? (
+                <div className="md:hidden fixed top-3 right-3 z-50">
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-md border cursor-pointer active:scale-95 ${
+                        isMobileMenuOpen
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-blue-500/30'
+                          : 'bg-white/95 backdrop-blur-md text-gray-700 hover:text-blue-600 border-gray-200/90 hover:bg-white'
+                      }`}
+                      title="Directory Options & View Layout"
+                      aria-label="Directory Options"
+                    >
+                      <MoreVertical size={20} />
+                    </button>
+
+                    {/* Google-Inspired Top-Right Compact Popover */}
+                    {isMobileMenuOpen && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-40" 
+                          onClick={() => setIsMobileMenuOpen(false)} 
+                        />
+                        <div className="absolute top-full right-0 mt-1.5 w-52 bg-white rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.18)] border border-gray-100 py-1 z-50 text-left animate-in fade-in zoom-in-95 duration-150 divide-y divide-gray-100">
+                          {/* Group 1: View Modes */}
+                          <div className="p-1 space-y-0.5">
+                            <div className="px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-gray-400">
+                              View Layout
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => { handleViewModeChange('grid'); setIsMobileMenuOpen(false); }}
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer ${
+                                (viewMode as string) === 'grid'
+                                  ? 'bg-blue-50 text-blue-700 font-bold'
+                                  : 'text-gray-700 hover:bg-gray-50'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <LayoutGrid size={14} className={(viewMode as string) === 'grid' ? 'text-blue-600' : 'text-gray-400'} />
+                                <span className="text-[11.5px]">2-Col Grid</span>
+                              </span>
+                              {(viewMode as string) === 'grid' && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => { handleViewModeChange('grid3'); setIsMobileMenuOpen(false); }}
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer ${
+                                (viewMode as string) === 'grid3'
+                                  ? 'bg-blue-50 text-blue-700 font-bold'
+                                  : 'text-gray-700 hover:bg-gray-50'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <Columns3 size={14} className={(viewMode as string) === 'grid3' ? 'text-blue-600' : 'text-gray-400'} />
+                                <span className="text-[11.5px]">3-Col Grid</span>
+                              </span>
+                              {(viewMode as string) === 'grid3' && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => { handleViewModeChange('compact'); setIsMobileMenuOpen(false); }}
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer ${
+                                (viewMode as string) === 'compact'
+                                  ? 'bg-blue-50 text-blue-700 font-bold'
+                                  : 'text-gray-700 hover:bg-gray-50'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <List size={14} className={(viewMode as string) === 'compact' ? 'text-blue-600' : 'text-gray-400'} />
+                                <span className="text-[11.5px]">Compact List</span>
+                              </span>
+                              {(viewMode as string) === 'compact' && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => { handleViewModeChange('map'); setIsMobileMenuOpen(false); }}
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer ${
+                                (viewMode as string) === 'map'
+                                  ? 'bg-blue-600 text-white font-bold'
+                                  : 'text-blue-700 hover:bg-blue-50'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <Map size={14} />
+                                <span className="text-[11.5px]">Map View</span>
+                              </span>
+                              {(viewMode as string) === 'map' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </button>
+                          </div>
+
+                          {/* Group 2: Actions & Filter */}
+                          <div className="p-1 space-y-0.5">
+                            <div className="px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider text-gray-400">
+                              Actions
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsMobileFilterOpen(true);
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[11.5px] font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                            >
+                              <span className="flex items-center gap-2">
+                                <Filter size={14} className="text-blue-600 shrink-0" />
+                                <span>Filter Directory</span>
+                              </span>
+                              {activeFiltersCount > 0 && (
+                                <span className="min-w-[17px] h-[17px] rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center px-1">
+                                  {activeFiltersCount}
+                                </span>
+                              )}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSearchMode('near_me');
+                                handleNearMeSearch();
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-[11.5px] font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                            >
+                              <MapPin size={14} className="text-emerald-600 shrink-0" />
+                              <span>Near Me (GPS)</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next = !isFullscreen;
+                                setIsFullscreen(next);
+                                if ((viewMode as string) === 'map') setIsMapFullscreen(next);
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-[11.5px] font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                            >
+                              {isFullscreen ? (
+                                <Minimize2 size={14} className="text-blue-600 shrink-0" />
+                              ) : (
+                                <Maximize2 size={14} className="text-gray-500 shrink-0" />
+                              )}
+                              <span>{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsHeroMinimized(!isHeroMinimized);
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-[11.5px] font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                            >
+                              <Layout size={14} className="text-gray-500 shrink-0" />
+                              <span>{isHeroMinimized ? 'Show Banner' : 'Hide Banner'}</span>
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+              {/* Non-Map Mobile Views (< 768px): Maximum Space Search Input with City Icon, Filter & Menu Icons */}
+              {(viewMode as string) !== 'map' && (
               <div className="md:hidden flex flex-col gap-1 w-full">
                 <div className="flex items-center gap-1 w-full">
                   {/* Unified Search Input Bar - takes maximum width */}
@@ -2833,55 +2998,55 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                               type="button"
                               onClick={() => { handleViewModeChange('grid'); setIsMobileMenuOpen(false); }}
                               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer ${
-                                viewMode === 'grid'
+                                (viewMode as string) === 'grid'
                                   ? 'bg-blue-50 text-blue-700 font-bold'
                                   : 'text-gray-700 hover:bg-gray-50'
                               }`}
                             >
                               <span className="flex items-center gap-2">
-                                <LayoutGrid size={14} className={viewMode === 'grid' ? 'text-blue-600' : 'text-gray-400'} />
+                                <LayoutGrid size={14} className={(viewMode as string) === 'grid' ? 'text-blue-600' : 'text-gray-400'} />
                                 <span className="text-[11.5px]">2-Col Grid</span>
                               </span>
-                              {viewMode === 'grid' && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
+                              {(viewMode as string) === 'grid' && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
                             </button>
 
                             <button
                               type="button"
                               onClick={() => { handleViewModeChange('grid3'); setIsMobileMenuOpen(false); }}
                               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer ${
-                                viewMode === 'grid3'
+                                (viewMode as string) === 'grid3'
                                   ? 'bg-blue-50 text-blue-700 font-bold'
                                   : 'text-gray-700 hover:bg-gray-50'
                               }`}
                             >
                               <span className="flex items-center gap-2">
-                                <Columns3 size={14} className={viewMode === 'grid3' ? 'text-blue-600' : 'text-gray-400'} />
+                                <Columns3 size={14} className={(viewMode as string) === 'grid3' ? 'text-blue-600' : 'text-gray-400'} />
                                 <span className="text-[11.5px]">3-Col Grid</span>
                               </span>
-                              {viewMode === 'grid3' && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
+                              {(viewMode as string) === 'grid3' && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
                             </button>
 
                             <button
                               type="button"
                               onClick={() => { handleViewModeChange('compact'); setIsMobileMenuOpen(false); }}
                               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer ${
-                                viewMode === 'compact'
+                                (viewMode as string) === 'compact'
                                   ? 'bg-blue-50 text-blue-700 font-bold'
                                   : 'text-gray-700 hover:bg-gray-50'
                               }`}
                             >
                               <span className="flex items-center gap-2">
-                                <List size={14} className={viewMode === 'compact' ? 'text-blue-600' : 'text-gray-400'} />
+                                <List size={14} className={(viewMode as string) === 'compact' ? 'text-blue-600' : 'text-gray-400'} />
                                 <span className="text-[11.5px]">Compact List</span>
                               </span>
-                              {viewMode === 'compact' && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
+                              {(viewMode as string) === 'compact' && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
                             </button>
 
                             <button
                               type="button"
                               onClick={() => { handleViewModeChange('map'); setIsMobileMenuOpen(false); }}
                               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer ${
-                                viewMode === 'map'
+                                (viewMode as string) === 'map'
                                   ? 'bg-blue-600 text-white font-bold'
                                   : 'text-blue-700 hover:bg-blue-50'
                               }`}
@@ -2890,7 +3055,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                                 <Map size={14} />
                                 <span className="text-[11.5px]">Map View</span>
                               </span>
-                              {viewMode === 'map' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                              {(viewMode as string) === 'map' && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
                             </button>
                           </div>
 
@@ -2918,7 +3083,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                               onClick={() => {
                                 const next = !isFullscreen;
                                 setIsFullscreen(next);
-                                if (viewMode === 'map') setIsMapFullscreen(next);
+                                if ((viewMode as string) === 'map') setIsMapFullscreen(next);
                                 setIsMobileMenuOpen(false);
                               }}
                               className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-[11.5px] font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
@@ -2950,7 +3115,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                 </div>
 
                 {/* Mobile Subline: Count & Quick Sort (Hidden in Map Mode) */}
-                {viewMode !== 'map' && (
+                {(viewMode as string) !== 'map' && (
                   <div className="flex items-center justify-between text-[11px] text-gray-500 px-0.5 gap-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span>
@@ -2970,6 +3135,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                   </div>
                 )}
               </div>
+              )}
 
               {/* ─── DESKTOP VIEW (>= 768px): Fully Responsive Layout (Zero Overlap on any screen width) ─── */}
               <div className="hidden md:flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 w-full min-w-0">
@@ -2991,7 +3157,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                           type="button"
                           onClick={() => handleViewModeChange('grid')}
                           className={`w-7 h-7 sm:w-8 sm:h-8 rounded-md flex items-center justify-center transition cursor-pointer ${
-                            viewMode === 'grid'
+                            (viewMode as string) === 'grid'
                               ? 'bg-white text-blue-600 shadow-2xs font-bold'
                               : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
                           }`}
@@ -3011,7 +3177,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                           type="button"
                           onClick={() => handleViewModeChange('grid3')}
                           className={`w-7 h-7 sm:w-8 sm:h-8 rounded-md flex items-center justify-center transition cursor-pointer ${
-                            viewMode === 'grid3'
+                            (viewMode as string) === 'grid3'
                               ? 'bg-white text-blue-600 shadow-2xs font-bold'
                               : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
                           }`}
@@ -3032,7 +3198,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                           type="button"
                           onClick={() => handleViewModeChange('compact')}
                           className={`w-7 h-7 sm:w-8 sm:h-8 rounded-md flex items-center justify-center transition cursor-pointer ${
-                            viewMode === 'compact'
+                            (viewMode as string) === 'compact'
                               ? 'bg-white text-blue-600 shadow-2xs font-bold'
                               : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
                           }`}
@@ -3053,7 +3219,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                           type="button"
                           onClick={() => handleViewModeChange('map')}
                           className={`w-7 h-7 sm:w-8 sm:h-8 rounded-md flex items-center justify-center transition cursor-pointer ${
-                            viewMode === 'map'
+                            (viewMode as string) === 'map'
                               ? 'bg-[#1A73E8] text-white shadow-2xs font-bold'
                               : 'text-blue-700 hover:bg-blue-100/60'
                           }`}
@@ -3073,7 +3239,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                           onClick={() => {
                             const next = !isFullscreen;
                             setIsFullscreen(next);
-                            if (viewMode === 'map') {
+                            if ((viewMode as string) === 'map') {
                               setIsMapFullscreen(next);
                             }
                           }}
@@ -3117,9 +3283,11 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
 
 
-              <Link href="/about" className="text-blue-500 hover:text-blue-700 hover:underline text-[11px] sm:text-xs font-semibold transition-colors inline-block w-fit">
-                What is Experiential Science Lab?
-              </Link>
+              {(viewMode as string) !== 'map' && (
+                <Link href="/about" className="text-blue-500 hover:text-blue-700 hover:underline text-[11px] sm:text-xs font-semibold transition-colors inline-block w-fit">
+                  What is Experiential Science Lab?
+                </Link>
+              )}
             </div>
           )}
 
@@ -3216,10 +3384,10 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
             /* 3. Authorized View: Display Schools & Pagination */
             <>
               {/* Top Pagination Bar (Strictly max 25 schools per page, shown above school cards) */}
-              {viewMode !== 'map' && renderPaginationBar('top')}
+              {(viewMode as string) !== 'map' && renderPaginationBar('top')}
 
               {/* School Cards: Map, Grid, or Compact List */}
-              {viewMode === 'map' ? (
+              {(viewMode as string) === 'map' ? (
                 <div className={`fixed inset-0 z-20 w-screen h-[100dvh] rounded-none border-none my-0 overflow-hidden flex flex-col md:relative md:inset-auto md:z-auto md:w-full md:rounded-3xl md:border md:border-slate-200/90 md:my-1 md:flex-row bg-slate-50 transition-all duration-300 ${
                   (isMapFullscreen || isFullscreen)
                     ? 'md:h-[calc(100vh-1rem)] md:my-0'
@@ -3572,6 +3740,22 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                         </button>
                       </div>
 
+                      {/* Filter Button in Bottom Sheet Header */}
+                      <button
+                        type="button"
+                        onClick={() => setIsMobileFilterOpen(true)}
+                        className="relative px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-blue-50 border border-gray-200 text-gray-700 hover:text-blue-600 text-xs font-bold flex items-center gap-1 transition cursor-pointer active:scale-95 shrink-0"
+                        title="Open Filters"
+                      >
+                        <Filter size={12} className={activeFiltersCount > 0 ? 'text-blue-600' : 'text-gray-600'} />
+                        <span className="text-[11px]">Filter</span>
+                        {activeFiltersCount > 0 && (
+                          <span className="min-w-[15px] h-[15px] rounded-full bg-blue-600 text-white text-[9px] font-black flex items-center justify-center px-0.5">
+                            {activeFiltersCount}
+                          </span>
+                        )}
+                      </button>
+
                       {/* Right summary indicator with toggle chevron */}
                       <button
                         type="button"
@@ -3616,6 +3800,21 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                               </button>
                             )}
                           </div>
+
+                          {/* Filter Button */}
+                          <button
+                            type="button"
+                            onClick={() => setIsMobileFilterOpen(true)}
+                            className="relative p-1.5 text-gray-700 hover:text-blue-600 rounded-lg bg-white hover:bg-blue-50 border border-gray-200 transition shrink-0 cursor-pointer"
+                            title="Filter Schools"
+                          >
+                            <Filter size={13} className={activeFiltersCount > 0 ? 'text-blue-600' : 'text-gray-600'} />
+                            {activeFiltersCount > 0 && (
+                              <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] rounded-full bg-blue-600 text-white text-[9px] font-black flex items-center justify-center px-0.5">
+                                {activeFiltersCount}
+                              </span>
+                            )}
+                          </button>
 
                           {/* Radius quick buttons */}
                           <div className="flex items-center gap-0.5 shrink-0 bg-white p-0.5 rounded-lg border border-gray-200">
@@ -3711,11 +3910,11 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                     )}
                   </div>
                 </div>
-              ) : viewMode === 'compact' ? (
+              ) : (viewMode as string) === 'compact' ? (
                 <div className="flex flex-col gap-2.5 sm:gap-3 touch-pan-y overscroll-contain mt-2 sm:mt-2.5 w-full">
                   {displayedSchools.slice(0, 25).map((school, idx) => renderCompactSchoolRow(school, idx))}
                 </div>
-              ) : viewMode === 'grid3' ? (
+              ) : (viewMode as string) === 'grid3' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-5 touch-pan-y overscroll-contain mt-2 sm:mt-2.5 w-full">
                   {displayedSchools.slice(0, 25).map((school, idx) => renderSchoolCard(school, idx))}
                 </div>
@@ -3734,7 +3933,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
               )}
 
               {/* Bottom Pagination Bar (Strictly max 25 schools per page, shown below school cards) */}
-              {viewMode !== 'map' && renderPaginationBar('bottom')}
+              {(viewMode as string) !== 'map' && renderPaginationBar('bottom')}
             </>
           )}
         </main>
@@ -3743,7 +3942,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
       {/* ── Top Rated Schools Section (Horizontal Scroll Carousel) ── */}
       {canViewSchools && topSchools.length > 0 && (
         <div className={`w-full bg-gray-50/80 py-8 sm:py-10 border-t border-gray-200 ${
-          viewMode === 'map' ? 'hidden md:block' : ''
+          (viewMode as string) === 'map' ? 'hidden md:block' : ''
         }`}>
           <div className="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-4 sm:mb-5">

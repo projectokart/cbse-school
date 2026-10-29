@@ -464,20 +464,20 @@ export const SchoolFilterSheet: React.FC<SchoolFilterSheetProps> = ({
         <div className="space-y-2">
           <input
             type="range"
-            min="0.5"
-            max="10"
-            step="0.5"
-            value={mapRadiusKm}
+            min="1"
+            max="25"
+            step="1"
+            value={Math.min(25, mapRadiusKm || 25)}
             onChange={(e) => setMapRadiusKm(Number(e.target.value))}
             className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
           />
           <div className="flex justify-between text-[10px] text-gray-500 font-medium">
-            <span>0.5 km</span>
-            <span>5 km</span>
+            <span>1 km</span>
             <span>10 km</span>
+            <span>25 km (Max)</span>
           </div>
           <div className="flex items-center justify-between gap-1 pt-1">
-            {[1, 2, 3, 5, 10].map((km) => (
+            {[3, 5, 10, 15, 25].map((km) => (
               <button
                 key={km}
                 type="button"

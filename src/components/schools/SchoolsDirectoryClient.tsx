@@ -754,11 +754,13 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
         return haystack.includes(q) || haystack.includes(rawQ);
       });
     } else if (searchMode === 'near_me') {
-      // Near Me in list views: sort strictly by nearest distance from current location
+      // Near Me Mode: strictly filter only schools within maximum radius of 25 km
+      list = list.filter((s) => s.distance !== undefined && s.distance <= 25);
       list = list.sort((a, b) => (a.distance ?? 99999) - (b.distance ?? 99999));
     } else if ((viewMode as string) === 'map') {
-      // Map View: Filter by Radius & sort by closest distance
-      const inRadius = list.filter((s) => s.distance !== undefined && s.distance <= mapRadiusKm);
+      // Map View: Filter by Radius (strictly capped at 25 km max) & sort by closest distance
+      const effectiveRadius = Math.min(25, mapRadiusKm || 25);
+      const inRadius = list.filter((s) => s.distance !== undefined && s.distance <= effectiveRadius);
       if (inRadius.length > 0) {
         list = inRadius.sort((a, b) => (a.distance || 0) - (b.distance || 0));
       } else {
@@ -872,7 +874,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
     // 11. Strict deduplication to ensure zero duplicate cards
     const seenCards = new Set<string>();
-    const uniqueList: typeof list = [];
+    let uniqueList: typeof list = [];
     for (const item of list) {
       const codeKey = (item.udise_code || item.school_id || item.id || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
       if (codeKey) {
@@ -900,6 +902,9 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
     };
 
     if (searchMode === 'near_me' || sortBy === 'distance_asc') {
+      if (searchMode === 'near_me') {
+        uniqueList = uniqueList.filter((s) => s.distance !== undefined && s.distance <= 25);
+      }
       uniqueList.sort((a, b) => (a.distance ?? 99999) - (b.distance ?? 99999));
     } else {
       uniqueList.sort((a, b) => {
@@ -952,24 +957,21 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
   ]);
 
   const schoolsForMap = useMemo(() => {
-    if (mapDisplayMode === 'accumulate') {
-      return accumulatedSchools.length > 0 ? accumulatedSchools : displayedSchools;
-    }
-    return displayedSchools;
-  }, [mapDisplayMode, accumulatedSchools, displayedSchools]);
+    // Map view must ONLY show the exact schools that are currently displayed in the list view (active page batch)!
+    return displayedSchools.slice(0, 25);
+  }, [displayedSchools]);
 
   const mapFilteredSchools = useMemo(() => {
-    const baseList = mapDisplayMode === 'accumulate' ? schoolsForMap : displayedSchools;
-    if (!mapListSearch.trim()) return baseList;
+    if (!mapListSearch.trim()) return schoolsForMap;
     const q = mapListSearch.toLowerCase().trim();
-    return baseList.filter((s) =>
+    return schoolsForMap.filter((s) =>
       (s.school_name || s.name || '').toLowerCase().includes(q) ||
       (s.village_ward || '').toLowerCase().includes(q) ||
       (s.district_name || '').toLowerCase().includes(q) ||
       (s.board || '').toLowerCase().includes(q) ||
       (s.udise_code || '').includes(q)
     );
-  }, [displayedSchools, schoolsForMap, mapDisplayMode, mapListSearch]);
+  }, [schoolsForMap, mapListSearch]);
 
   const handleSelectSchoolFromList = (school: SchoolRecord, fromMapMarker = false) => {
     setMapSelectedSchool(school);
@@ -3624,7 +3626,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
                               {/* Radius Quick Selector */}
                               <div className="flex items-center gap-0.5 shrink-0 bg-white p-0.5 rounded-lg border border-gray-200">
-                                {[1, 3, 5, 10].map((km) => (
+                                {[3, 5, 10, 25].map((km) => (
                                   <button
                                     key={km}
                                     type="button"
@@ -3654,42 +3656,41 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                             )}
                           </div>
 
-                          {/* Sheet Bottom Footer: Add Next 25 Points on Map */}
-                          <div className="p-2.5 border-t border-gray-200 bg-slate-50 shrink-0 flex flex-col gap-1.5">
+                          {/* Sheet Bottom Footer: Prev & Next Page Navigation (Exact List Parity) */}
+                          <div className="p-3 border-t border-gray-200 bg-slate-50 shrink-0 flex flex-col gap-2">
                             <div className="flex items-center justify-between text-xs text-gray-600 font-medium">
                               <span>
-                                Map Points: <strong className="text-gray-900">{schoolsForMap.length}</strong> of{' '}
-                                <strong className="text-gray-900">{totalSchoolsCount}</strong>
+                                Page <strong className="text-gray-900 font-bold">{currentPage}</strong> of{' '}
+                                <strong className="text-gray-900 font-bold">{totalPages}</strong>
                               </span>
-                              <span className="text-[11px] text-emerald-700 font-semibold">
-                                (+25 pts / click)
+                              <span className="text-[11px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                                {schoolsForMap.length} Schools on Map
                               </span>
                             </div>
 
-                            {hasMoreSchools ? (
+                            <div className="flex items-center gap-2 w-full">
                               <button
                                 type="button"
-                                onClick={loadNextBatch}
-                                disabled={isLoadingMore}
-                                className="w-full py-2 px-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50 cursor-pointer"
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage <= 1 || isLoadingMore}
+                                className="flex-1 py-2 px-3 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 text-gray-800 text-xs font-bold transition flex items-center justify-center gap-1 shadow-2xs disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                                title="Previous 25 Schools on Map"
                               >
-                                {isLoadingMore ? (
-                                  <>
-                                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    <span>Adding 25 points...</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <PlusCircle size={14} />
-                                    <span>Add Next 25 Points on Map</span>
-                                  </>
-                                )}
+                                <ChevronLeft size={14} />
+                                <span>Previous</span>
                               </button>
-                            ) : (
-                              <div className="text-center text-[11px] text-gray-500 font-semibold py-1">
-                                ✓ All {totalSchoolsCount} school points added on map
-                              </div>
-                            )}
+
+                              <button
+                                type="button"
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage >= totalPages || isLoadingMore}
+                                className="flex-1 py-2 px-3 rounded-xl bg-[#006FCC] hover:bg-[#005399] text-white text-xs font-bold transition flex items-center justify-center gap-1 shadow-2xs disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                                title="Next 25 Schools on Map"
+                              >
+                                <span>Next</span>
+                                <ChevronRight size={14} />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -3710,14 +3711,46 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
                   {/* ─── MAP CANVAS (Takes rest of container on Desktop, full height on Mobile) ─── */}
                   <div className="flex-1 h-full relative min-w-0">
+                    {/* Floating On-Map Pagination Widget (Ensures map matches list view page 1:1) */}
+                    <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-gray-200/90 shadow-md">
+                      <button
+                        type="button"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage <= 1 || isLoadingMore}
+                        className="p-1 rounded-full text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                        title="Previous 25 Schools on Map"
+                        aria-label="Previous Page"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+
+                      <span className="text-xs font-bold text-gray-800 whitespace-nowrap">
+                        Page {currentPage} of {totalPages}
+                        <span className="text-gray-500 font-normal ml-1 hidden xs:inline">
+                          ({(currentPage - 1) * 25 + 1}–{Math.min(currentPage * 25, totalSchoolsCount)})
+                        </span>
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage >= totalPages || isLoadingMore}
+                        className="p-1 rounded-full text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                        title="Next 25 Schools on Map"
+                        aria-label="Next Page"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+
                     <SchoolFinderMap
                       className="rounded-none md:rounded-r-3xl md:rounded-l-none"
                       searchCenter={searchCenter}
                       mapFocus={mapFocus}
-                      radiusKm={mapRadiusKm}
+                      radiusKm={Math.min(25, mapRadiusKm || 25)}
                       schools={schoolsForMap}
-                      allSchoolsDots={allSchoolsMapPoints}
-                      showAllRedDots={mapDisplayMode === 'all_dots'}
+                      allSchoolsDots={[]}
+                      showAllRedDots={false}
                       selectedSchool={mapSelectedSchool}
                       onSelectSchool={(school) => handleSelectSchoolFromList(school as SchoolRecord, true)}
                       onOpenDetails={(school) => setDetailDrawerSchool(school as SchoolRecord)}
@@ -3860,7 +3893,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
                           {/* Radius quick buttons */}
                           <div className="flex items-center gap-0.5 shrink-0 bg-white p-0.5 rounded-lg border border-gray-200">
-                            {[1, 3, 5, 10].map((km) => (
+                            {[3, 5, 10, 25].map((km) => (
                               <button
                                 key={km}
                                 type="button"
@@ -3930,24 +3963,37 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                       </div>
                     )}
 
-                    {/* Mobile Footer: Add Next 25 Points on Map */}
+                    {/* Mobile Footer: Map Pagination Controls (Sync 1:1 with List View) */}
                     {mobileSheetState !== 'peek' && (
-                      <div className="p-2 border-t border-gray-100 bg-white flex items-center justify-between gap-2 shrink-0">
-                        <span className="text-[11px] font-bold text-gray-700">
-                          {schoolsForMap.length} / {totalSchoolsCount} Points
-                        </span>
-                        {hasMoreSchools ? (
-                          <button
-                            type="button"
-                            onClick={loadNextBatch}
-                            disabled={isLoadingMore}
-                            className="px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition flex items-center gap-1 disabled:opacity-50 cursor-pointer shadow-2xs"
-                          >
-                            {isLoadingMore ? 'Adding 25...' : '+ Add 25 Points'}
-                          </button>
-                        ) : (
-                          <span className="text-[10px] text-gray-500 font-medium">All points added</span>
-                        )}
+                      <div className="p-2.5 border-t border-gray-100 bg-white flex items-center justify-between gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage <= 1 || isLoadingMore}
+                          className="px-3 py-1.5 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold transition flex items-center gap-1 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+                        >
+                          <ChevronLeft size={13} />
+                          <span>Prev</span>
+                        </button>
+
+                        <div className="text-center">
+                          <div className="text-[11px] font-black text-gray-800">
+                            Page {currentPage} of {totalPages}
+                          </div>
+                          <div className="text-[10px] text-gray-500 font-medium">
+                            {schoolsForMap.length} / {totalSchoolsCount} Schools
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage >= totalPages || isLoadingMore}
+                          className="px-3 py-1.5 rounded-xl bg-[#006FCC] hover:bg-[#005399] text-white text-xs font-bold transition flex items-center gap-1 disabled:opacity-40 disabled:pointer-events-none cursor-pointer shadow-2xs"
+                        >
+                          <span>Next</span>
+                          <ChevronRight size={13} />
+                        </button>
                       </div>
                     )}
                   </div>

@@ -71,7 +71,7 @@ export default async function HomePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }}
       />
-      <SchoolsDirectoryClient initialData={directoryData} query={parsedQuery} />
+      <SchoolsDirectoryClient initialData={directoryData} />
     </>
   );
 }

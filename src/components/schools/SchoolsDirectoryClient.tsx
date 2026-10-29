@@ -719,8 +719,11 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
           .toLowerCase();
         return haystack.includes(q) || haystack.includes(rawQ);
       });
-    } else if (searchMode === 'near_me' || (viewMode as string) === 'map') {
-      // 3. Near Me or Map View: Filter by Radius & sort by closest distance
+    } else if (searchMode === 'near_me') {
+      // Near Me in list views: sort strictly by nearest distance from current location
+      list = list.sort((a, b) => (a.distance ?? 99999) - (b.distance ?? 99999));
+    } else if ((viewMode as string) === 'map') {
+      // Map View: Filter by Radius & sort by closest distance
       const inRadius = list.filter((s) => s.distance !== undefined && s.distance <= mapRadiusKm);
       if (inRadius.length > 0) {
         list = inRadius.sort((a, b) => (a.distance || 0) - (b.distance || 0));
@@ -862,7 +865,9 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
       return ratingScore + likesScore + reviewsScore + studentsScore + hasRealImg;
     };
 
-    if (searchMode !== 'near_me') {
+    if (searchMode === 'near_me' || sortBy === 'distance_asc') {
+      uniqueList.sort((a, b) => (a.distance ?? 99999) - (b.distance ?? 99999));
+    } else {
       uniqueList.sort((a, b) => {
         switch (sortBy) {
           case 'popularity_desc':
@@ -1291,9 +1296,9 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
         (pos) => {
           const { latitude, longitude, accuracy } = pos.coords;
           setSearchCenter({ lat: latitude, lng: longitude });
-          setMapFocus({ lat: latitude, lng: longitude, zoom: 14, timestamp: Date.now() });
-          setViewMode('map');
           setSearchMode('near_me');
+          setSortBy('distance_asc');
+          // Stay in current view (grid, list, compact) - DO NOT force open map view
         },
         (err) => {
           console.warn('Geolocation error:', err);
@@ -3282,11 +3287,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
 
 
-              {(viewMode as string) !== 'map' && (
-                <Link href="/about" className="text-blue-500 hover:text-blue-700 hover:underline text-[11px] sm:text-xs font-semibold transition-colors inline-block w-fit">
-                  What is Experiential Science Lab?
-                </Link>
-              )}
+
             </div>
           )}
 
@@ -3382,8 +3383,7 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
           ) : (
             /* 3. Authorized View: Display Schools & Pagination */
             <>
-              {/* Top Pagination Bar (Strictly max 25 schools per page, shown above school cards) */}
-              {(viewMode as string) !== 'map' && renderPaginationBar('top')}
+
 
               {/* School Cards: Map, Grid, or Compact List */}
               {(viewMode as string) === 'map' ? (

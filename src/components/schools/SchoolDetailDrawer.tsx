@@ -364,23 +364,12 @@ export default function SchoolDetailDrawer({
 
               {/* Quick Actions Strip */}
               <div className="flex items-center gap-2 pt-1">
-                <Link
-                  href={profileUrl}
-                  onClick={onClose}
-                  className="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold bg-[#006FCC] hover:bg-[#005399] text-white flex items-center justify-center gap-1.5 shadow-xs transition active:scale-98 cursor-pointer"
-                  title="Open Complete School Profile Page"
-                >
-                  <span>Open School</span>
-                  <ExternalLink size={12} />
-                </Link>
-
                 <a
                   href={mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="py-1.5 px-3 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center justify-center gap-1.5 transition active:scale-98"
+                  className="py-1.5 px-3 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 flex items-center justify-center transition active:scale-98"
                 >
-                  <Navigation size={12} />
                   <span>Directions</span>
                 </a>
 

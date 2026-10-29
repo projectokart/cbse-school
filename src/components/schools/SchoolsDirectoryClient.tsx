@@ -1161,43 +1161,26 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
 
     return (
       <div
-        className={`w-full bg-white rounded-2xl border border-[#E8E9E9] px-3.5 py-2.5 sm:px-5 sm:py-3 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 ${
-          position === 'top' ? 'mb-4' : 'mt-8'
+        className={`w-full flex items-center justify-center ${
+          position === 'top' ? 'mb-3' : 'mt-6'
         }`}
       >
-        {/* Left: Showing X-Y of Z Schools */}
-        <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-[10px] bg-[#EDF5FA] text-[#006FCC] font-bold text-[11px] border border-[#DDF0FC]">
-            Page {currentPage} of {totalPages}
-          </span>
-          <span>
-            Showing <strong className="text-[#1B1F23] font-bold">{startItem}–{endItem}</strong> of{' '}
-            <strong className="text-[#1B1F23] font-bold">{totalSchoolsCount}</strong> Schools
-          </span>
-          <span className="hidden md:inline text-[11px] text-slate-500 font-medium">
-            (25 / page)
-          </span>
-          {isLoadingMore && (
-            <Loader2 size={14} className="animate-spin text-[#006FCC] ml-1" />
-          )}
-        </div>
-
-        {/* Right: Prev + Page Numbers + Next (Labster 14px CTA Buttons) */}
-        <div className="flex items-center gap-1.5 flex-wrap justify-center">
+        {/* Compact Pagination: Only Prev + 1, 2, 3... + Next */}
+        <div className="inline-flex items-center gap-1 p-1 bg-white rounded-2xl border border-gray-200 shadow-2xs">
           <button
             type="button"
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage <= 1 || isLoadingMore}
-            className="inline-flex items-center gap-1 h-9 px-3.5 rounded-[14px] border border-[#E8E9E9] bg-[#F7F8F8] hover:bg-[#EDF5FA] text-[#003C6E] hover:text-[#006FCC] text-xs font-bold font-['Montserrat',sans-serif] transition-all duration-200 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-            title="Previous Page (25 Schools)"
+            className="inline-flex items-center gap-1 h-8 px-2.5 sm:px-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 text-gray-700 hover:text-[#006FCC] text-xs font-bold transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+            title="Previous Page"
           >
-            <ChevronLeft size={14} />
+            <ChevronLeft size={13} />
             <span>Prev</span>
           </button>
 
           {paginationPages.map((p, idx) =>
             p === '...' ? (
-              <span key={`dots-${position}-${idx}`} className="px-1.5 text-xs text-slate-400 font-bold">
+              <span key={`dots-${position}-${idx}`} className="px-1 text-xs text-gray-400 font-bold">
                 ...
               </span>
             ) : (
@@ -1206,10 +1189,10 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
                 type="button"
                 onClick={() => handlePageChange(Number(p))}
                 disabled={isLoadingMore}
-                className={`min-w-[36px] h-9 px-3 rounded-[14px] text-xs font-bold font-['Montserrat',sans-serif] transition-all duration-200 active:scale-[0.98] cursor-pointer flex items-center justify-center ${
+                className={`min-w-[30px] sm:min-w-[34px] h-8 px-2 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer flex items-center justify-center ${
                   currentPage === Number(p)
-                    ? 'bg-[#006FCC] hover:bg-[#005399] text-white shadow-xs border border-[#006FCC]'
-                    : 'bg-white hover:bg-[#F7F8F8] text-[#1B1F23] hover:text-[#006FCC] border border-[#E8E9E9]'
+                    ? 'bg-[#006FCC] hover:bg-[#005399] text-white shadow-2xs font-black'
+                    : 'bg-white hover:bg-gray-100 text-gray-700 hover:text-[#006FCC]'
                 }`}
                 title={`Go to Page ${p}`}
               >
@@ -1222,11 +1205,11 @@ function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: num
             type="button"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage >= totalPages || isLoadingMore}
-            className="inline-flex items-center gap-1 h-9 px-3.5 rounded-[14px] border border-[#E8E9E9] bg-[#F7F8F8] hover:bg-[#EDF5FA] text-[#003C6E] hover:text-[#006FCC] text-xs font-bold font-['Montserrat',sans-serif] transition-all duration-200 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
-            title="Next Page (25 Schools)"
+            className="inline-flex items-center gap-1 h-8 px-2.5 sm:px-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 text-gray-700 hover:text-[#006FCC] text-xs font-bold transition active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+            title="Next Page"
           >
             <span>Next</span>
-            <ChevronRight size={14} />
+            <ChevronRight size={13} />
           </button>
         </div>
       </div>

@@ -135,13 +135,19 @@ export default function ClaimStatusModal({
                 <span className="text-gray-500">Full Name:</span>
                 <span className="font-semibold text-gray-900">{claim.claimantName}</span>
               </div>
+              {claim.designation && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">Designation:</span>
+                  <span className="font-semibold text-gray-900">{claim.designation}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <span className="text-gray-500">Email:</span>
                 <span className="font-semibold text-gray-900">{claim.claimantEmail}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-500">Phone:</span>
-                <span className="font-semibold text-gray-900">{claim.phone}</span>
+                <span className="text-gray-500">WhatsApp Phone:</span>
+                <span className="font-semibold text-gray-900 font-mono">{claim.phone}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-500">Location:</span>

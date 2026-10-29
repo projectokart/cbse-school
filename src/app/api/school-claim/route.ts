@@ -9,6 +9,7 @@ export interface SchoolClaimRecord {
   claimantName: string;
   claimantEmail: string;
   phone: string;
+  designation?: string;
   pincode: string;
   state: string;
   district: string;
@@ -71,6 +72,7 @@ export async function POST(req: Request) {
       claimant_name,
       claimant_email,
       phone,
+      designation,
       pincode,
       state,
       district,
@@ -110,6 +112,7 @@ export async function POST(req: Request) {
     if (existing) {
       existing.claimantName = claimant_name;
       existing.phone = phone;
+      existing.designation = designation || existing.designation;
       existing.pincode = pincode || existing.pincode;
       existing.state = state || existing.state;
       existing.district = district || existing.district;
@@ -125,6 +128,7 @@ export async function POST(req: Request) {
       claimantName: String(claimant_name).trim(),
       claimantEmail: String(claimant_email).trim(),
       phone: String(phone).trim(),
+      designation: String(designation || '').trim(),
       pincode: String(pincode || '').trim(),
       state: String(state || '').trim(),
       district: String(district || '').trim(),

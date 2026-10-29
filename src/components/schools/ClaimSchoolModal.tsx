@@ -45,6 +45,7 @@ export default function ClaimSchoolModal({
 
   // Form Fields
   const [name, setName] = useState('');
+  const [designation, setDesignation] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [pincode, setPincode] = useState('');
@@ -150,20 +151,18 @@ export default function ClaimSchoolModal({
               setDistrict(FALLBACK_PINS[cleanPin].d);
               setState(FALLBACK_PINS[cleanPin].s);
             } else {
-              setPincodeError('Could not auto-fetch district. You can type it manually if needed.');
+              setPincodeError('Could not auto-detect location. Please enter District and State below manually.');
             }
           }
         })
         .catch(() => {
-          setPincodeError('Network error checking pincode.');
+          setPincodeError('Could not auto-fetch location. Please enter District and State below manually.');
         })
         .finally(() => {
           setIsFetchingLocation(false);
         });
     } else {
-      if (cleanPin.length < 6) {
-        setDistrict('');
-        setState('');
+      if (cleanPin.length === 0) {
         setPincodeError(null);
       }
     }
@@ -215,17 +214,29 @@ export default function ClaimSchoolModal({
       setSubmitError('Please enter your full name.');
       return;
     }
-    if (!email.trim() || !email.includes('@')) {
-      setSubmitError('Please enter a valid email address.');
+    if (!designation.trim()) {
+      setSubmitError('Please enter your designation in the school (e.g. Principal, Director, Admin).');
       return;
     }
     const cleanPhone = phone.replace(/\D/g, '');
     if (cleanPhone.length < 10) {
-      setSubmitError('Please enter a valid 10-digit phone number (compulsory).');
+      setSubmitError('Please enter a valid 10-digit WhatsApp mobile number (compulsory).');
       return;
     }
     if (!pincode.trim() || pincode.trim().length !== 6) {
       setSubmitError('Please enter a valid 6-digit postal PIN code.');
+      return;
+    }
+    if (!district.trim()) {
+      setSubmitError('Please enter your district.');
+      return;
+    }
+    if (!state.trim()) {
+      setSubmitError('Please enter your state.');
+      return;
+    }
+    if (!email.trim() || !email.includes('@')) {
+      setSubmitError('Please enter a valid email address.');
       return;
     }
 
@@ -243,6 +254,7 @@ export default function ClaimSchoolModal({
         claimantName: name.trim(),
         claimantEmail: email.trim(),
         phone: phone.trim(),
+        designation: designation.trim(),
         pincode: pincode.trim(),
         state: state.trim() || 'Delhi',
         district: district.trim() || 'New Delhi',
@@ -350,77 +362,128 @@ export default function ClaimSchoolModal({
                 </div>
               </div>
 
-              {/* ── 2. NAME FIELD ── */}
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                  <User size={13} className="text-blue-600" />
-                  <span>Full Name *</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Ramesh Kumar Sharma"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500 text-xs bg-white"
-                />
+              {/* ── 2. NAME & DESIGNATION FIELDS ── */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                    <User size={13} className="text-blue-600" />
+                    <span>Full Name *</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Ramesh Kumar Sharma"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500 text-xs bg-white"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                    <Building2 size={13} className="text-indigo-600" />
+                    <span>Designation in School *</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Principal / Director / Admin"
+                    value={designation}
+                    onChange={(e) => setDesignation(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500 text-xs bg-white"
+                  />
+                </div>
               </div>
 
-              {/* ── 3. PHONE NUMBER FIELD (Compulsory) ── */}
+              {/* ── 3. WHATSAPP MOBILE NUMBER (Compulsory) ── */}
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-gray-700 flex items-center justify-between">
-                  <span className="flex items-center gap-1">
-                    <Phone size={13} className="text-emerald-600" />
-                    <span>Phone / WhatsApp Number (Compulsory) *</span>
-                  </span>
-                  <span className="text-[10px] text-gray-400">10-Digit Mobile</span>
-                </label>
-                <input
-                  type="tel"
-                  required
-                  maxLength={10}
-                  placeholder="e.g. 9876543210"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500 text-xs bg-white"
-                />
-              </div>
-
-              {/* ── 4. PINCODE FIELD (Auto-fetches State & District) ── */}
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-gray-700 flex items-center justify-between">
-                  <span className="flex items-center gap-1">
-                    <MapPin size={13} className="text-red-500" />
-                    <span>PIN Code *</span>
-                  </span>
-                  {isFetchingLocation && (
-                    <span className="text-[10px] text-blue-600 font-medium animate-pulse">
-                      Fetching District &amp; State...
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-black">
+                      W
                     </span>
-                  )}
+                    <span className="text-emerald-950 font-bold">WhatsApp Mobile Number (Compulsory) *</span>
+                  </span>
+                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    Contact &amp; Verification
+                  </span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  maxLength={6}
-                  placeholder="e.g. 110001"
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500 text-xs bg-white"
-                />
-
-                {/* Auto-fetched District & State badges */}
-                {(district || state) && (
-                  <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center gap-2 text-xs text-emerald-800">
-                    <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
-                    <span>
-                      Detected Location: <strong>{district}</strong>, <strong>{state}</strong>
-                    </span>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-xs select-none">
+                    +91
                   </div>
-                )}
-                {pincodeError && (
-                  <p className="text-[11px] text-amber-600">{pincodeError}</p>
-                )}
+                  <input
+                    type="tel"
+                    required
+                    maxLength={10}
+                    placeholder="10-digit WhatsApp number (e.g. 9876543210)"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                    className="w-full pl-11 pr-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs bg-white font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* ── 4. PINCODE & EDITABLE DISTRICT / STATE ── */}
+              <div className="space-y-2">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-gray-700 flex items-center justify-between">
+                    <span className="flex items-center gap-1">
+                      <MapPin size={13} className="text-red-500" />
+                      <span>PIN Code *</span>
+                    </span>
+                    {isFetchingLocation && (
+                      <span className="text-[10px] text-blue-600 font-medium animate-pulse">
+                        Auto-fetching District &amp; State...
+                      </span>
+                    )}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    placeholder="e.g. 110001"
+                    value={pincode}
+                    onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500 text-xs bg-white"
+                  />
+                  {pincodeError && (
+                    <p className="text-[11px] text-amber-600">{pincodeError}</p>
+                  )}
+                </div>
+
+                {/* Editable District & State Inputs (Autofills from PIN, user can edit) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-gray-700 flex items-center justify-between">
+                      <span>District *</span>
+                      <span className="text-[10px] text-gray-400 font-normal">Autofills / Editable</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Central Delhi"
+                      value={district}
+                      onChange={(e) => setDistrict(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500 text-xs bg-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-gray-700 flex items-center justify-between">
+                      <span>State *</span>
+                      <span className="text-[10px] text-gray-400 font-normal">Autofills / Editable</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Delhi"
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500 text-xs bg-white"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* ── 5. EMAIL FIELD WITH "LOGIN NOW" BUTTON & OTP VERIFICATION ── */}

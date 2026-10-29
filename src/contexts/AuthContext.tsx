@@ -23,6 +23,7 @@ export interface SchoolClaimRecord {
   claimantName: string;
   claimantEmail: string;
   phone: string;
+  designation?: string;
   pincode: string;
   state: string;
   district: string;
@@ -191,6 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           claimant_name: claimData.claimantName,
           claimant_email: claimData.claimantEmail,
           phone: claimData.phone,
+          designation: claimData.designation,
           pincode: claimData.pincode,
           state: claimData.state,
           district: claimData.district,
